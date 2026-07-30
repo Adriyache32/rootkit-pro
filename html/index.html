@@ -439,8 +439,8 @@ body.no-anim, .no-anim * { animation:none !important; transition:none !important
   <div class="status-bar anim-status">
     <div class="status-pill"><div class="status-dot anim-dot" id="dot-device"></div><span id="status-device">Scanning...</span></div>
     <div class="status-pill"><div class="status-dot online anim-dot"></div><span>ADB Online</span></div>
-    <div class="status-pill" id="pill-brand" style="display:none"><span id="status-brand"></span></div>
-    <div class="status-pill" id="pill-count" style="display:none"><span id="status-count"></span></div>
+    <div class="status-pill" id="pill-brand" style="display:none;cursor:pointer" onclick="cycleDevice()" title="Click to switch device"><span id="status-brand"></span></div>
+    <div class="status-pill" id="pill-count" style="display:none;cursor:pointer" onclick="cycleDevice()" title="Click to switch device"><span id="status-count"></span></div>
     <div class="status-pill" style="cursor:pointer;opacity:0.5" onclick="toggleUSB()" title="Secret USB Analyzer"><span style="font-size:10px">🔌</span></div>
   </div>
 
@@ -867,6 +867,14 @@ function selectDevice(serial) {
   if (premiumActive) { loadDeviceDetails(serial); loadOptimize(serial); loadRecovery(serial); }
 }
 
+function cycleDevice() {
+  if (allDevices.length < 2) return;
+  const idx = allDevices.findIndex(d => d.serial === selectedSerial);
+  const next = (idx + 1) % allDevices.length;
+  selectDevice(allDevices[next].serial);
+  toast(`Switched to ${allDevices[next].brand} ${allDevices[next].model}`, 'info');
+}
+
 async function refreshDevice() {
   document.getElementById('status-device').textContent = 'Scanning...';
   document.getElementById('dot-device').className = 'status-dot warning anim-dot';
@@ -880,7 +888,7 @@ async function refreshDevice() {
   allDevices = data.devices;
   document.getElementById('dot-device').className = 'status-dot online anim-dot';
   document.getElementById('status-device').textContent = `${data.count} device${data.count>1?'s':''}`;
-  document.getElementById('pill-count').style.display = ''; document.getElementById('status-count').textContent = `📱 ${data.count} connected`;
+  document.getElementById('pill-count').style.display = ''; document.getElementById('status-count').textContent = `📱 ${data.count} connected${data.count>1?' (tap to switch)':''}`;
   if (!selectedSerial || !allDevices.find(d=>d.serial===selectedSerial)) { selectedSerial=allDevices[0].serial; document.getElementById('pill-brand').style.display=''; document.getElementById('status-brand').textContent=`${allDevices[0].brand} ${allDevices[0].model}`; }
   document.getElementById('device-body').innerHTML = allDevices.map(d => renderDeviceCard(d)).join('');
   document.getElementById('card-methods').style.display=''; document.getElementById('card-risk').style.display=''; document.getElementById('card-actions').style.display='';
