@@ -900,9 +900,10 @@ async function refreshDevice() {
     document.getElementById('dot-device').className = 'status-dot offline'; document.getElementById('status-device').textContent='No devices';
     document.getElementById('device-body').innerHTML=`<div class="no-device"><div class="no-device-icon">🔌</div><div class="no-device-text">No devices detected</div><div class="no-device-hint">Connect via USB and enable USB Debugging</div></div>`;
     document.getElementById('card-methods').style.display='none'; document.getElementById('card-risk').style.display='none'; document.getElementById('card-actions').style.display='none';
-    document.getElementById('pill-brand').style.display='none'; document.getElementById('pill-count').style.display='none'; allDevices=[]; return;
+    document.getElementById('pill-brand').style.display='none'; document.getElementById('pill-count').style.display='none'; allDevices=[]; scheduleRefresh(); return;
   }
   allDevices = data.devices;
+  scheduleRefresh();
   document.getElementById('dot-device').className = 'status-dot online anim-dot';
   document.getElementById('status-device').textContent = `${data.count} device${data.count>1?'s':''}`;
   document.getElementById('pill-count').style.display = ''; document.getElementById('status-count').textContent = `📱 ${data.count} connected${data.count>1?' (tap to switch)':''}`;
@@ -1528,10 +1529,20 @@ async function loadRecovery(serial) {
   document.getElementById('recovery-body').innerHTML = html;
 }
 
+let refreshTimer = null;
+let refreshInterval = 3000;
+
+function scheduleRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  const hasDevice = allDevices && allDevices.length > 0;
+  refreshInterval = hasDevice ? 30000 : 3000;
+  refreshTimer = setInterval(refreshDevice, refreshInterval);
+}
+
 // Init
 checkPremium();
 refreshDevice();
-setInterval(refreshDevice, 3000);
+scheduleRefresh();
 setInterval(() => { if(usbVisible) refreshUSB(); }, 5000);
 
 // Auto-start particles if master on
