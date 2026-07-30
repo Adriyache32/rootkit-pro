@@ -160,8 +160,6 @@ body.no-anim, .no-anim * { animation:none !important; transition:none !important
   background-size:400% 400%; z-index:-1; opacity:0;
   transition:opacity 0.3s;
 }
-.anim-card-border:hover::before { opacity:1; animation: borderSpin 3s linear infinite; }
-@keyframes borderSpin { 0%{background-position:0% 50%} 100%{background-position:400% 50%} }
 
 .card-header { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
 .card-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; }
@@ -644,6 +642,9 @@ body.no-anim, .no-anim * { animation:none !important; transition:none !important
             <div class="func-card" onclick="openFunc('mirror')" data-func="mirror">
               <div class="func-icon">📺</div><div class="func-name">Mirror</div><div class="func-count">Screen</div>
             </div>
+            <div class="func-card" onclick="openFunc('analytics')" data-func="analytics">
+              <div class="func-icon">📊</div><div class="func-name">Analytics</div><div class="func-count">Usage</div>
+            </div>
           </div>
           <!-- FUNCTION DETAIL -->
           <div id="func-detail" style="display:none;margin-top:4px">
@@ -859,7 +860,7 @@ function renderDeviceCard(d) {
   const batteryClass = batteryPct < 30 ? 'danger' : batteryPct < 50 ? 'warning' : '';
   const isSelected = d.serial === selectedSerial;
   const borderStyle = isSelected ? 'border:2px solid var(--blue);' : '';
-  const modeLabel = d.mode === 'fastboot' ? '<span style="color:var(--yellow);font-size:11px">⚡ FASTBOOT</span>' : '';
+  const modeLabel = d.mode === 'fastboot' ? '<span style="color:var(--yellow);font-size:11px">⚡ FASTBOOT</span>' : d.device_mode === 'recovery' ? '<span style="color:var(--purple);font-size:11px">🔄 RECOVERY</span>' : d.device_mode === 'sideload' ? '<span style="color:var(--cyan);font-size:11px">📦 SIDELOAD</span>' : d.device_mode === 'charging' ? '<span style="color:var(--green);font-size:11px">🔌 CHARGING</span>' : '';
   return `<div class="card anim-card-float anim-card-border" style="${borderStyle}cursor:pointer;margin-bottom:12px" onclick="selectDevice('${d.serial}')">
     <div class="card-header"><div class="card-icon blue">📱</div><div class="card-title">${d.brand||'Unknown'} ${d.model||''} ${modeLabel}</div><div style="flex:1"></div>
     <span style="font-size:11px;color:var(--fg3);font-family:'JetBrains Mono',monospace">${d.serial}</span></div>
@@ -1249,6 +1250,10 @@ const FUNC_MENU = {
       {label:"📸 Capture", action:"mirror_capture"},
       {label:"⏸️ Stop", action:"mirror_stop"},
     ]},
+  analytics: {name:"📊 Device Analytics", desc:"Data usage, screen time, signal, uptime",
+    actions:[
+      {label:"📊 Full Analytics", action:"analytics_all"},
+    ]},
 };
 
 let currentFunc = null;
@@ -1441,6 +1446,14 @@ async function execFunc(action) {
       document.getElementById('mirror-container').style.display = 'none';
       document.getElementById('mirror-img').src = '';
       termLog('Mirror stopped', 'info');
+    // ANALYTICS
+    } else if (action === 'analytics_all') {
+      const r = await api(`/api/device-analytics?serial=${encodeURIComponent(serial)}`);
+      if (r) {
+        let s = '';
+        for (const [k,v] of Object.entries(r)) s += `${k.replace(/_/g,' ')}:\n  ${String(v).slice(0,200)}\n\n`;
+        termLog(s || 'No analytics data', 'info');
+      } else termLog('Failed', 'err');
     } else {
       termLog(`ℹ️ ${action} — feature coming soon`, 'info');
     }

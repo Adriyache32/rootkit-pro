@@ -87,14 +87,24 @@ def get_device_info(serial):
     frp = run_adb_serial(serial, "shell getprop ro.frp.pst")
     dm = run_adb_serial(serial, "shell getprop ro.boot.verifiedbootstate")
     product = run_adb_serial(serial, "shell getprop ro.product.board")
-
+    bootmode = run_adb_serial(serial, "shell getprop ro.bootmode")
+    device_mode = "android"
+    if "recovery" in bootmode.lower():
+        device_mode = "recovery"
+    elif "bootloader" in bootmode.lower() or "fastboot" in bootmode.lower():
+        device_mode = "fastboot"
+    elif "sideload" in bootmode.lower():
+        device_mode = "sideload"
+    elif "charger" in bootmode.lower():
+        device_mode = "charging"
+    
     return {
         "connected": True, "serial": serial, "platform": platform.system(),
         "brand": brand, "model": model, "android": android, "sdk": sdk,
         "codename": codename, "cpu": cpu, "imei": imei_clean,
         "bootloader": bootloader, "rooted": rooted,
         "battery": battery, "oem_unlock": oem, "frp": frp, "dm_verify": dm,
-        "product": product,
+        "product": product, "device_mode": device_mode,
     }
 
 def get_devices():
@@ -870,7 +880,7 @@ def validate_premium_key(key):
                     "features": ["device_details","actions_all","usb_analyzer","premium_badge",
                                  "fastboot_recovery","shizuku_dhizuku","optimize","recovery",
                                  "buildprop","cpu_tweaks","test_toolbox","logcat","ota_block","adb_terminal",
-                                 "battery_health","hardware_test","wireless_adb","screen_mirror"],
+                                 "battery_health","hardware_test","wireless_adb","screen_mirror","device_analytics"],
                     "expires": info["expires"]}
     return {"valid": False}
 
@@ -955,14 +965,14 @@ def get_premium_status(key=None):
                         "features":["premium_badge","device_details","actions_all","optimize","recovery","usb_analyzer","priority_support",
                                     "fastboot_recovery","shizuku_dhizuku","screenshot","screenrecord","edl_mode",
                                     "buildprop","cpu_tweaks","test_toolbox","logcat","ota_block","adb_terminal",
-                                    "battery_health","hardware_test","wireless_adb","screen_mirror"]}
+                                    "battery_health","hardware_test","wireless_adb","screen_mirror","device_analytics"]}
     # Master key
     if key == "RKT-MASTER-2026-FREE":
         return {"active":True,"user":"master","tier":"lifetime","expires":"never",
                 "features":["premium_badge","device_details","actions_all","optimize","recovery","usb_analyzer","priority_support",
                             "fastboot_recovery","shizuku_dhizuku","screenshot","screenrecord","edl_mode",
                             "buildprop","cpu_tweaks","test_toolbox","logcat","ota_block","adb_terminal",
-                            "battery_health","hardware_test","wireless_adb","screen_mirror"]}
+                            "battery_health","hardware_test","wireless_adb","screen_mirror","device_analytics"]}
     # Check pending keys
     if key:
         for did, info in load_pending_keys().items():
@@ -971,7 +981,7 @@ def get_premium_status(key=None):
                         "features":["premium_badge","device_details","actions_all","usb_analyzer",
                                     "fastboot_recovery","shizuku_dhizuku","screenshot","screenrecord","edl_mode",
                                     "buildprop","cpu_tweaks","test_toolbox","logcat","ota_block","adb_terminal",
-                                    "battery_health","hardware_test","wireless_adb","screen_mirror"]}
+                                    "battery_health","hardware_test","wireless_adb","screen_mirror","device_analytics"]}
     return {"active":False}
 
 # ===== BUILD.PROP EDITOR =====
@@ -1068,6 +1078,30 @@ def adb_shell_cmd(serial=None, cmd=""):
     adb_cmd = f'"{ADB}" -s {serial}' if serial else f'"{ADB}"'
     out = run(f'{adb_cmd} shell {cmd}', timeout=15)
     return {"cmd": cmd, "output": out}
+
+# ===== DEVICE ANALYTICS =====
+def get_device_analytics(serial=None):
+    adb_shell = f'"{ADB}" -s {serial} shell' if serial else f'"{ADB}" shell'
+    result = {}
+    # Data usage
+    data_raw = run(f'{adb_shell} dumpsys netstats 2>/dev/null | grep -i "total\|mobile\|wifi" | head -10')
+    result["data_usage"] = data_raw or "N/A"
+    # Screen time
+    screen_time = run(f'{adb_shell} dumpsys power 2>/dev/null | grep "mScreenOnTime\|mScreenOffTime" | head -5')
+    result["screen_time"] = screen_time or "N/A"
+    # Last boot
+    uptime = run(f'{adb_shell} uptime 2>/dev/null')
+    result["uptime"] = uptime.strip() if uptime else "N/A"
+    # Signal strength
+    signal = run(f'{adb_shell} dumpsys telephony.registry 2>/dev/null | grep "mSignalStrength" | head -3')
+    result["signal_strength"] = signal.strip() if signal else "N/A"
+    # Active apps + services
+    processes = run(f'{adb_shell} ps -A 2>/dev/null | wc -l')
+    result["running_processes"] = processes.strip() if processes else "N/A"
+    # WiFi info
+    wifi = run(f'{adb_shell} dumpsys wifi 2>/dev/null | grep -i "SSID\|rssi\|link" | head -5')
+    result["wifi_info"] = wifi or "N/A"
+    return result
 
 # ===== BATTERY HEALTH =====
 def get_battery_health(serial=None):
@@ -1236,6 +1270,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             data = adb_shell_cmd(params.get('serial',''), params.get('cmd',''))
         elif path == '/api/battery-health':
             data = get_battery_health(params.get('serial',''))
+        elif path == '/api/device-analytics':
+            data = get_device_analytics(params.get('serial',''))
         elif path == '/api/hardware-test':
             data = run_hardware_test(params.get('serial',''), params.get('test'))
         elif path == '/api/wireless-adb':
