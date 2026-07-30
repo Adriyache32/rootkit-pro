@@ -869,7 +869,8 @@ def validate_premium_key(key):
             return {"valid": True, "tier": info["tier"],
                     "features": ["device_details","actions_all","usb_analyzer","premium_badge",
                                  "fastboot_recovery","shizuku_dhizuku","optimize","recovery",
-                                 "buildprop","cpu_tweaks","test_toolbox","logcat","ota_block","adb_terminal"],
+                                 "buildprop","cpu_tweaks","test_toolbox","logcat","ota_block","adb_terminal",
+                                 "battery_health","hardware_test","wireless_adb","screen_mirror"],
                     "expires": info["expires"]}
     return {"valid": False}
 
@@ -953,20 +954,24 @@ def get_premium_status(key=None):
                 return {"active":True,"user":user,"tier":info["tier"],"expires":info["expires"],
                         "features":["premium_badge","device_details","actions_all","optimize","recovery","usb_analyzer","priority_support",
                                     "fastboot_recovery","shizuku_dhizuku","screenshot","screenrecord","edl_mode",
-                                    "buildprop","cpu_tweaks","test_toolbox","logcat","ota_block","adb_terminal"]}
+                                    "buildprop","cpu_tweaks","test_toolbox","logcat","ota_block","adb_terminal",
+                                    "battery_health","hardware_test","wireless_adb","screen_mirror"]}
     # Master key
     if key == "RKT-MASTER-2026-FREE":
         return {"active":True,"user":"master","tier":"lifetime","expires":"never",
                 "features":["premium_badge","device_details","actions_all","optimize","recovery","usb_analyzer","priority_support",
                             "fastboot_recovery","shizuku_dhizuku","screenshot","screenrecord","edl_mode",
-                            "buildprop","cpu_tweaks","test_toolbox","logcat","ota_block","adb_terminal"]}
+                            "buildprop","cpu_tweaks","test_toolbox","logcat","ota_block","adb_terminal",
+                            "battery_health","hardware_test","wireless_adb","screen_mirror"]}
     # Check pending keys
     if key:
         for did, info in load_pending_keys().items():
             if info.get("key") == key:
                 return {"active":True,"user":did,"tier":"free-monthly","expires":"30 days",
                         "features":["premium_badge","device_details","actions_all","usb_analyzer",
-                                    "fastboot_recovery","shizuku_dhizuku","screenshot","screenrecord","edl_mode"]}
+                                    "fastboot_recovery","shizuku_dhizuku","screenshot","screenrecord","edl_mode",
+                                    "buildprop","cpu_tweaks","test_toolbox","logcat","ota_block","adb_terminal",
+                                    "battery_health","hardware_test","wireless_adb","screen_mirror"]}
     return {"active":False}
 
 # ===== BUILD.PROP EDITOR =====
@@ -1064,6 +1069,93 @@ def adb_shell_cmd(serial=None, cmd=""):
     out = run(f'{adb_cmd} shell {cmd}', timeout=15)
     return {"cmd": cmd, "output": out}
 
+# ===== BATTERY HEALTH =====
+def get_battery_health(serial=None):
+    adb_shell = f'"{ADB}" -s {serial} shell' if serial else f'"{ADB}" shell'
+    result = {}
+    for f in ['capacity','cycle_count','charge_full','charge_full_design','charge_counter','current_now','status','health','technology']:
+        val = run(f'{adb_shell} cat /sys/class/power_supply/battery/{f} 2>/dev/null')
+        if val:
+            result[f] = val
+    if not result:
+        # Fallback to dumpsys
+        ds = run(f'{adb_shell} dumpsys battery 2>/dev/null')
+        for line in ds.split('\n'):
+            if ':' in line:
+                k,v = line.split(':',1)
+                result[k.strip().lower().replace(' ','_')] = v.strip()
+    if result.get('charge_full') and result.get('charge_full_design'):
+        try:
+            result['health_pct'] = round(int(result['charge_full']) / int(result['charge_full_design']) * 100, 1)
+        except: pass
+    return result
+
+# ===== HARDWARE TESTER =====
+def run_hardware_test(serial=None, test=None):
+    adb_shell = f'"{ADB}" -s {serial} shell' if serial else f'"{ADB}" shell'
+    if test == "camera":
+        cams = run(f'{adb_shell} dumpsys media.camera 2>/dev/null | grep -i "camera\|module\|device" | head -20')
+        return {"test":"camera","output":cams or "No camera info"}
+    elif test == "wifi":
+        wifi = run(f'{adb_shell} dumpsys wifi 2>/dev/null | grep -i "Wi-Fi is\|state\|enabled\|connected\|ssid" | head -10')
+        return {"test":"wifi","output":wifi or "No WiFi info"}
+    elif test == "gps":
+        gps = run(f'{adb_shell} dumpsys location 2>/dev/null | grep -i "gps\|provider\|location" | head -10')
+        return {"test":"gps","output":gps or "No GPS info"}
+    elif test == "nfc":
+        nfc = run(f'{adb_shell} dumpsys nfc 2>/dev/null | grep -i "NFC\|nfc" | head -10')
+        return {"test":"nfc","output":nfc or "No NFC"}
+    elif test == "bluetooth":
+        bt = run(f'{adb_shell} dumpsys bluetooth_manager 2>/dev/null | grep -i "state\|adapter\|enabled" | head -10')
+        return {"test":"bluetooth","output":bt or "No BT info"}
+    return {"test":"unknown","output":"Invalid test"}
+
+# ===== WIRELESS ADB =====
+def wireless_adb(serial=None, action="status", port=5555):
+    adb_cmd = f'"{ADB}" -s {serial}' if serial else f'"{ADB}"'
+    adb_shell = f'{adb_cmd} shell'
+    if action == "enable":
+        ip = run(f'{adb_shell} ip addr show wlan0 2>/dev/null | grep "inet " | head -1')
+        if not ip:
+            ip = run(f'{adb_shell} getprop dhcp.wlan0.ipaddress 2>/dev/null')
+        ip_addr = ""
+        if ip:
+            parts = ip.split()
+            for p in parts:
+                if '.' in p and '/' in p:
+                    ip_addr = p.split('/')[0]
+                    break
+                elif '.' in p:
+                    ip_addr = p
+        if not ip_addr:
+            ip_addr = run(f'{adb_shell} ifconfig wlan0 2>/dev/null | grep "inet addr" | head -1')
+            if ':' in ip_addr:
+                ip_addr = ip_addr.split(':')[1].split()[0]
+        run(f'{adb_cmd} tcpip {port} 2>/dev/null')
+        return {"status":"ok","action":"enabled","port":port,"ip":ip_addr or "unknown","msg":f"Wireless ADB on {ip_addr}:{port}"}
+    elif action == "disable":
+        run(f'{adb_cmd} usb 2>/dev/null')
+        return {"status":"ok","action":"disabled","msg":"Wireless ADB disabled, back to USB"}
+    else:
+        mode = run(f'{adb_cmd} shell getprop service.adb.tcp.port 2>/dev/null')
+        ip = run(f'{adb_shell} ip addr show wlan0 2>/dev/null | grep "inet " | head -1')
+        return {"status":"checking","tcp_mode": bool(mode.strip()),"ip":"..."}
+
+# ===== SCREEN MIRROR =====
+def screen_mirror(serial=None):
+    import base64, time
+    adb_shell = f'"{ADB}" -s {serial} shell' if serial else f'"{ADB}" shell'
+    ts = str(int(time.time()*1000))
+    path = f"/sdcard/.rkt_mirror_{ts}.png"
+    run(f'{adb_shell} screencap -p {path} 2>/dev/null')
+    adb_cmd = f'"{ADB}" -s {serial}' if serial else f'"{ADB}"'
+    raw = run(f'{adb_cmd} exec-out cat {path} 2>/dev/null')
+    run(f'{adb_shell} rm {path} 2>/dev/null')
+    if raw:
+        b64 = base64.b64encode(raw.encode('latin-1')).decode() if raw else ""
+        return {"image": b64, "ts": ts}
+    return {"error": "No screenshot"}
+
 class Handler(http.server.BaseHTTPRequestHandler):
     def log_message(self, *args): pass
 
@@ -1142,6 +1234,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
             data = ota_block(params.get('serial',''), params.get('action','status'))
         elif path == '/api/adb-shell':
             data = adb_shell_cmd(params.get('serial',''), params.get('cmd',''))
+        elif path == '/api/battery-health':
+            data = get_battery_health(params.get('serial',''))
+        elif path == '/api/hardware-test':
+            data = run_hardware_test(params.get('serial',''), params.get('test'))
+        elif path == '/api/wireless-adb':
+            data = wireless_adb(params.get('serial',''), params.get('action','status'), params.get('port',5555))
+        elif path == '/api/screen-mirror':
+            data = screen_mirror(params.get('serial',''))
         elif path == '/api/system':
             data = get_system_info()
         elif path == '/':

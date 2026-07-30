@@ -631,6 +631,19 @@ body.no-anim, .no-anim * { animation:none !important; transition:none !important
             <div class="func-card" onclick="openFunc('adbterm')" data-func="adbterm">
               <div class="func-icon">🖥️</div><div class="func-name">ADB Shell</div><div class="func-count">Terminal</div>
             </div>
+            <!-- NEW v3.2 -->
+            <div class="func-card" onclick="openFunc('battery')" data-func="battery">
+              <div class="func-icon">🔋</div><div class="func-name">Battery</div><div class="func-count">Health</div>
+            </div>
+            <div class="func-card" onclick="openFunc('hardware')" data-func="hardware">
+              <div class="func-icon">🧪</div><div class="func-name">Hardware</div><div class="func-count">Tester</div>
+            </div>
+            <div class="func-card" onclick="openFunc('wireless')" data-func="wireless">
+              <div class="func-icon">📶</div><div class="func-name">Wireless ADB</div><div class="func-count">TCP/IP</div>
+            </div>
+            <div class="func-card" onclick="openFunc('mirror')" data-func="mirror">
+              <div class="func-icon">📺</div><div class="func-name">Mirror</div><div class="func-count">Screen</div>
+            </div>
           </div>
           <!-- FUNCTION DETAIL -->
           <div id="func-detail" style="display:none;margin-top:4px">
@@ -640,6 +653,10 @@ body.no-anim, .no-anim * { animation:none !important; transition:none !important
             </div>
             <div id="func-detail-actions" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px"></div>
             <div id="func-detail-status" style="font-size:11px;color:var(--fg2)"></div>
+            <div id="mirror-container" style="display:none;margin-top:4px;text-align:center">
+              <img id="mirror-img" style="max-width:100%;border-radius:6px;border:1px solid var(--border)">
+              <div style="font-size:9px;color:var(--fg3);margin-top:2px">Tap Capture to refresh</div>
+            </div>
           </div>
           <!-- TERMINAL LOG -->
           <div style="margin-top:6px">
@@ -1206,6 +1223,31 @@ const FUNC_MENU = {
       {label:"▶️ Run Command", action:"adbterm_run"},
       {label:"📋 Last Output", action:"adbterm_last"},
     ]},
+  // NEW v3.2
+  battery: {name:"🔋 Battery Health", desc:"Capacity, cycles, health status",
+    actions:[
+      {label:"📊 Health Info", action:"battery_info"},
+      {label:"🔄 Refresh", action:"battery_refresh"},
+    ]},
+  hardware: {name:"🧪 Hardware Tester", desc:"Test camera, WiFi, GPS, NFC, BT",
+    actions:[
+      {label:"📷 Camera", action:"hw_camera"},
+      {label:"📶 WiFi", action:"hw_wifi"},
+      {label:"🛰️ GPS", action:"hw_gps"},
+      {label:"📡 NFC", action:"hw_nfc"},
+      {label:"🔵 Bluetooth", action:"hw_bluetooth"},
+    ]},
+  wireless: {name:"📶 Wireless ADB", desc:"Enable ADB over TCP/IP",
+    actions:[
+      {label:"🌐 Enable", action:"wireless_enable"},
+      {label:"🔌 Disable", action:"wireless_disable"},
+      {label:"📋 Status", action:"wireless_status"},
+    ]},
+  mirror: {name:"📺 Screen Mirror", desc:"Live screenshot from device",
+    actions:[
+      {label:"📸 Capture", action:"mirror_capture"},
+      {label:"⏸️ Stop", action:"mirror_stop"},
+    ]},
 };
 
 let currentFunc = null;
@@ -1363,6 +1405,41 @@ async function execFunc(action) {
       window._lastAdbOutput = out;
     } else if (action === 'adbterm_last') {
       termLog(window._lastAdbOutput || '(no previous command)', 'info');
+    // BATTERY HEALTH
+    } else if (action === 'battery_info' || action === 'battery_refresh') {
+      const r = await api(`/api/battery-health?serial=${encodeURIComponent(serial)}`);
+      if (r) {
+        let s = '';
+        for (const [k,v] of Object.entries(r)) s += `${k}: ${v}\n`;
+        termLog(s || 'No battery data', 'info');
+      } else termLog('Failed to get battery info', 'err');
+    // HARDWARE TESTER
+    } else if (action.startsWith('hw_')) {
+      const test = action.replace('hw_','');
+      const r = await api(`/api/hardware-test?serial=${encodeURIComponent(serial)}&test=${test}`);
+      termLog(r?.output?.slice(0,400)||'No output', 'info');
+    // WIRELESS ADB
+    } else if (action === 'wireless_enable') {
+      const r = await api(`/api/wireless-adb?serial=${encodeURIComponent(serial)}&action=enable`);
+      termLog(r?.msg||'Wireless ADB enabled', r?.status==='ok'?'ok':'err');
+    } else if (action === 'wireless_disable') {
+      const r = await api(`/api/wireless-adb?serial=${encodeURIComponent(serial)}&action=disable`);
+      termLog(r?.msg||'Wireless ADB disabled', r?.status==='ok'?'ok':'err');
+    } else if (action === 'wireless_status') {
+      const r = await api(`/api/wireless-adb?serial=${encodeURIComponent(serial)}&action=status`);
+      termLog(`TCP mode: ${r?.tcp_mode ? 'ON' : 'OFF'}`, r?.tcp_mode ? 'ok' : 'info');
+    // SCREEN MIRROR
+    } else if (action === 'mirror_capture') {
+      const r = await api(`/api/screen-mirror?serial=${encodeURIComponent(serial)}`);
+      if (r && r.image) {
+        document.getElementById('mirror-container').style.display = '';
+        document.getElementById('mirror-img').src = 'data:image/png;base64,' + r.image;
+        termLog('Screen captured', 'ok');
+      } else termLog('Failed to capture screen', 'err');
+    } else if (action === 'mirror_stop') {
+      document.getElementById('mirror-container').style.display = 'none';
+      document.getElementById('mirror-img').src = '';
+      termLog('Mirror stopped', 'info');
     } else {
       termLog(`ℹ️ ${action} — feature coming soon`, 'info');
     }
