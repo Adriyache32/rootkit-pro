@@ -780,6 +780,185 @@ def get_optimization(serial=None):
     level = "good" if score >= 85 else ("fair" if score >= 60 else "poor")
     return {"score": score, "level": level, "tips": tips}
 
+# ===== OPTIMIZATION V2 (real-time precise) =====
+def get_optimization_v2(serial=None):
+    adb_shell = f'"{ADB}" -s {serial} shell' if serial else f'"{ADB}" shell'
+    data = {}
+
+    # CPU load per core
+    cpu_lines = run(f'{adb_shell} cat /proc/stat 2>/dev/null | grep "^cpu"')
+    if cpu_lines:
+        cores = {}
+        for line in cpu_lines.strip().split('\n'):
+            parts = line.split()
+            name = parts[0]
+            vals = [int(x) for x in parts[1:8] if x.isdigit()]
+            if vals:
+                total = sum(vals)
+                idle = vals[3]
+                cores[name] = {"total": total, "idle": idle, "load_pct": round((1 - idle/total)*100, 1) if total > 0 else 0}
+        data["cpu"] = cores
+
+    # Real RAM
+    meminfo = run(f'{adb_shell} cat /proc/meminfo 2>/dev/null')
+    if meminfo:
+        ram = {}
+        for line in meminfo.split('\n'):
+            if ':' in line:
+                k,v = line.split(':')
+                val = v.strip().replace(' kB','')
+                if val.isdigit():
+                    ram[k.strip().lower()] = round(int(val)/1024, 1)
+        data["ram_mb"] = ram
+        if ram.get('memtotal') and ram.get('memavailable'):
+            data["ram_used_pct"] = round((1 - ram['memavailable']/ram['memtotal'])*100, 1)
+
+    # Top processes by RAM
+    ps_out = run(f'{adb_shell} ps -A -o PID,NAME,RSS 2>/dev/null | sort -k3 -rn | head -15')
+    if ps_out:
+        procs = []
+        for line in ps_out.split('\n')[1:]:
+            parts = line.strip().split(None, 2)
+            if len(parts) == 3 and parts[2].isdigit():
+                procs.append({"pid": parts[0], "name": parts[1], "rss_mb": round(int(parts[2])/1024, 1)})
+        data["top_ram_processes"] = procs[:10]
+
+    # Battery drainers (wakelocks)
+    wl = run(f'{adb_shell} dumpsys batterystats 2>/dev/null | grep "Wake lock\|partial" | head -15')
+    if wl:
+        data["wakelocks"] = [l.strip() for l in wl.split('\n') if l.strip()]
+
+    # Temperature sensors
+    temp_sensors = run(f'{adb_shell} for f in /sys/class/thermal/thermal_zone*/temp; do echo "$(cat $f 2>/dev/null)°C $f"; done 2>/dev/null | head -10')
+    if temp_sensors:
+        data["temperatures"] = [l.strip() for l in temp_sensors.split('\n') if l.strip()]
+
+    # Top battery draining apps
+    drainers = run(f'{adb_shell} dumpsys batterystats 2>/dev/null | grep -A 100 "Per-app" | grep -i "u0" | head -10')
+    if drainers:
+        data["top_drainers"] = [l.strip() for l in drainers.split('\n') if l.strip()]
+
+    # Largest storage folders
+    large_dirs = run(f'{adb_shell} du -sh /sdcard/*/ 2>/dev/null | sort -rh | head -10')
+    if large_dirs:
+        data["largest_folders"] = [l.strip() for l in large_dirs.split('\n') if l.strip()]
+
+    # Network interfaces & speed
+    net = run(f'{adb_shell} cat /proc/net/dev 2>/dev/null | grep ":" | head -10')
+    if net:
+        data["network_ifaces"] = [l.strip() for l in net.split('\n') if l.strip()]
+
+    return data
+
+# ===== AI DIAGNOSTIC AGENT =====
+AGENT_KNOWLEDGE = {
+    "battery": {
+        "keywords": ["battery","drain","charge","bateria","consumo","energia"],
+        "response": "🔋 BATTERY REPORT\n- Check top drainers with the Battery Health feature\n- Disable Bluetooth/GPS when not in use\n- Reduce screen timeout (Settings > Display)\n- Use Battery Optimization for each app\n- If draining fast: check for wakelocks in Optimization v2"
+    },
+    "slow": {
+        "keywords": ["slow","lag","lento","tarda","congela","freeze","stuck"],
+        "response": "🐢 PERFORMANCE TIPS\n- Enable Force GPU rendering in Developer Options\n- Reduce animation scale to 0.5x or disable\n- Clear dalvik cache (Optimization section)\n- Uninstall unused apps\n- Switch CPU to Performance mode (CPU Tweaks)"
+    },
+    "root": {
+        "keywords": ["root","magisk","su","permisos","superuser","unroot"],
+        "response": "🛡️ ROOT INFO\n- Root status checked automatically on connect\n- Use Magisk for systemless root\n- To unroot: use Magisk > Uninstall or flash stock boot.img\n- Some apps detect root: use Magisk Hide / Zygisk"
+    },
+    "unlock": {
+        "keywords": ["unlock","desbloquear","bootloader","bl"],
+        "response": "🔓 BOOTLOADER UNLOCK\n- Check OEM Unlock in Developer Options\n- Use Unlock Methods section for your brand\n- Xiaomi: Mi Unlock tool + 168h wait\n- Samsung: OEM toggle in settings\n- Backup data first — unlock wipes everything"
+    },
+    "recovery": {
+        "keywords": ["recovery","twrp","orangefox","pbrp","custom"],
+        "response": "🔄 CUSTOM RECOVERY\n- Check Recovery section to detect TWRP/OFox/PBRP\n- Flash via: fastboot flash recovery <file>.img\n- Use Volume+Power to boot recovery\n- TWRP: backup, install zips, restore"
+    },
+    "frp": {
+        "keywords": ["frp","google","cuenta","account","bypass","lock"],
+        "response": "🔐 FRP / ACCOUNTS\n- FRP = Factory Reset Protection\n- Check if FRP is active in Risk Analysis\n- Bypass methods vary by Android version\n- For Samsung: use SamFw Tool or Octopus Box\n- For Xiaomi: use Mi Account unlock tools"
+    },
+    "imei": {
+        "keywords": ["imei","baseband","signal","senal","red","network","modem"],
+        "response": "📡 IMEI / NETWORK\n- IMEI detected automatically on connect\n- If IMEI is null: baseband may be corrupted\n- Backup NV with: adb shell dd if=/dev/block/bootdevice/by-name/modemst1\n- Restore via QPST/QFIL for Qualcomm devices"
+    },
+    "usb": {
+        "keywords": ["usb","conexion","connect","driver","reconoce","detect"],
+        "response": "🔌 USB CONNECTION\n- Enable USB Debugging in Developer Options\n- Try different USB cable/port\n- Install/reinstall USB drivers\n- Use USB Analyzer to check connected devices\n- Try: adb kill-server && adb start-server && adb devices"
+    },
+    "brick": {
+        "keywords": ["brick","dead","muerto","no enciende","bootloop","loop","soft brick"],
+        "response": "💀 BRICK / BOOTLOOP\n- Try Recovery mode: VolUp+Power\n- Flash stock firmware via ODIN/SP Flash Tool/XiaomiTool\n- EDL mode for Qualcomm devices\n- For Magisk bootloop: delete /data/unencrypted/magisk.img\n- Use Bootloop Recovery feature if available"
+    },
+    "samsung": {
+        "keywords": ["samsung","knox","odin","download","galaxy"],
+        "response": "🟦 SAMSUNG SPECIFIC\n- Knox tripped: no going back (eFuse)\n- Use Odin3 on Windows for firmware\n- Download Mode: VolUp+VolDown+USB\n- Check Security section for Knox info\n- Camera/SecureFolder may break if Knox=0x1"
+    },
+    "xiaomi": {
+        "keywords": ["xiaomi","miui","redmi","poco","hyperos"],
+        "response": "🔶 XIAOMI SPECIFIC\n- Mi Unlock: bind account, wait 168h\n- EDL mode for Qualcomm chipsets\n- Use MiFlashTool for firmware\n- Check Device Details for unlock cooldown\n- Unlock bootloader via official Mi Unlock"
+    },
+    "huawei": {
+        "keywords": ["huawei","honor","emui","kirin","hisilicon"],
+        "response": "🟥 HUAWEI SPECIFIC\n- Bootloader unlock codes no longer officially available\n- Paid services via third-party (HCU, etc.)\n- Check method-specific guides in Unlock Methods\n- Some Kirin devices: DC-Unlocker or HCU Client"
+    },
+    "motorola": {
+        "keywords": ["motorola","moto","lenovo","motox"],
+        "response": "🟣 MOTOROLA SPECIFIC\n- Official unlock: motorola.com/unlockbootloader\n- Get unlock code by email (24-48h)\n- Fastboot: fastboot oem unlock <code>\n- Some Moto devices: EDL firehose available"
+    },
+    "iphone": {
+        "keywords": ["iphone","apple","ios","ipad","checkra1n","palera1n"],
+        "response": "🍎 iOS / IPHONE\n- Jailbreak via checkra1n (A5-A11) or palera1n\n- DFU mode required for jailbreak\n- Checkra1n works on Mac/Linux\n- iCloud lock: no official unlock (IMEI services only)\n- iOS backup via iTunes/Finder"
+    },
+    "heating": {
+        "keywords": ["heat","hot","caliente","calor","temperatura","temp","overheat"],
+        "response": "🌡️ OVERHEATING\n- Check temperatures in Optimization v2\n- Remove phone case while charging/using\n- Close background apps\n- Reduce brightness\n- If persistent: could be bad battery or CPU throttling"
+    },
+    "optimize": {
+        "keywords": ["optimizar","optimize","clean","limpiar","cache","basura","junk"],
+        "response": "🧹 OPTIMIZATION\n- Use Device Optimization section for full scan\n- Clear dalvik cache in Recovery\n- Uninstall unused apps\n- Disable animations in Developer Options\n- Use SD Maid or similar for deep clean"
+    },
+}
+
+def agent_query(serial=None, query=""):
+    """AI-like diagnostic agent"""
+    adb_shell = f'"{ADB}" -s {serial} shell' if serial else f'"{ADB}" shell'
+    q = query.lower().strip()
+    
+    if not q:
+        return {"response": "🤖 ROOT KIT AGENT\nAsk me about: battery, performance, root, unlock, recovery, FRP, IMEI, USB, brick, Samsung, Xiaomi, Huawei, Motorola, iPhone, heating, or optimization.\n\nExample: 'my battery drains fast' or 'how to unlock bootloader'", "context": {}}
+    
+    # Gather relevant device context
+    context = {}
+    
+    # Check for device info
+    brand = run(f'{adb_shell} getprop ro.product.brand 2>/dev/null').strip().lower()
+    model = run(f'{adb_shell} getprop ro.product.model 2>/dev/null').strip()
+    android = run(f'{adb_shell} getprop ro.build.version.release 2>/dev/null').strip()
+    if brand: context["brand"] = brand
+    if model: context["model"] = model
+    if android: context["android"] = android
+    
+    # Find matching knowledge
+    matched = []
+    for topic, info in AGENT_KNOWLEDGE.items():
+        for kw in info["keywords"]:
+            if kw in q:
+                matched.append(info["response"])
+                break
+    
+    if not matched:
+        matched.append("🤖 I don't have specific info about that. Try: battery, performance, root, unlock, recovery, FRP, IMEI, USB connection, brick/bootloop, or specific brands like Samsung, Xiaomi, Huawei, Motorola, iPhone.")
+    
+    response = "\n\n---\n\n".join(matched)
+    
+    # Add context
+    if context:
+        response += f"\n\n📱 DEVICE CONTEXT\nBrand: {context.get('brand','?')}\nModel: {context.get('model','?')}\nAndroid: {context.get('android','?')}"
+    
+    # Add followup suggestion
+    response += "\n\n💡 For more help, be more specific or use the relevant Premium section."
+    
+    return {"response": response, "context": context}
+
 # ===== RECOVERY INFO =====
 def get_recovery_info(serial=None):
     """Check recovery status and TWRP installation"""
@@ -880,7 +1059,8 @@ def validate_premium_key(key):
                     "features": ["device_details","actions_all","usb_analyzer","premium_badge",
                                  "fastboot_recovery","shizuku_dhizuku","optimize","recovery",
                                  "buildprop","cpu_tweaks","test_toolbox","logcat","ota_block","adb_terminal",
-                                 "battery_health","hardware_test","wireless_adb","screen_mirror","device_analytics"],
+                                 "battery_health","hardware_test","wireless_adb","screen_mirror","device_analytics",
+                                 "optimize_v2","agent"],
                     "expires": info["expires"]}
     return {"valid": False}
 
@@ -965,14 +1145,16 @@ def get_premium_status(key=None):
                         "features":["premium_badge","device_details","actions_all","optimize","recovery","usb_analyzer","priority_support",
                                     "fastboot_recovery","shizuku_dhizuku","screenshot","screenrecord","edl_mode",
                                     "buildprop","cpu_tweaks","test_toolbox","logcat","ota_block","adb_terminal",
-                                    "battery_health","hardware_test","wireless_adb","screen_mirror","device_analytics"]}
+                                    "battery_health","hardware_test","wireless_adb","screen_mirror","device_analytics",
+                                    "optimize_v2","agent"]}
     # Master key
     if key == "RKT-MASTER-2026-FREE":
         return {"active":True,"user":"master","tier":"lifetime","expires":"never",
                 "features":["premium_badge","device_details","actions_all","optimize","recovery","usb_analyzer","priority_support",
                             "fastboot_recovery","shizuku_dhizuku","screenshot","screenrecord","edl_mode",
                             "buildprop","cpu_tweaks","test_toolbox","logcat","ota_block","adb_terminal",
-                            "battery_health","hardware_test","wireless_adb","screen_mirror","device_analytics"]}
+                            "battery_health","hardware_test","wireless_adb","screen_mirror","device_analytics",
+                            "optimize_v2","agent"]}
     # Check pending keys
     if key:
         for did, info in load_pending_keys().items():
@@ -981,7 +1163,8 @@ def get_premium_status(key=None):
                         "features":["premium_badge","device_details","actions_all","usb_analyzer",
                                     "fastboot_recovery","shizuku_dhizuku","screenshot","screenrecord","edl_mode",
                                     "buildprop","cpu_tweaks","test_toolbox","logcat","ota_block","adb_terminal",
-                                    "battery_health","hardware_test","wireless_adb","screen_mirror","device_analytics"]}
+                                    "battery_health","hardware_test","wireless_adb","screen_mirror","device_analytics",
+                                    "optimize_v2","agent"]}
     return {"active":False}
 
 # ===== BUILD.PROP EDITOR =====
@@ -1254,6 +1437,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
             data = {"key": generate_premium_key(params.get('tier','monthly')), "tier": params.get('tier','monthly'), "note": "Contact @Adriyache32 to activate"}
         elif path == '/api/optimize':
             data = get_optimization(params.get('serial',''))
+        elif path == '/api/optimize/v2':
+            data = get_optimization_v2(params.get('serial',''))
+        elif path == '/api/agent':
+            data = agent_query(params.get('serial',''), params.get('query',''))
         elif path == '/api/recovery':
             data = get_recovery_info(params.get('serial',''))
         elif path == '/api/buildprop':

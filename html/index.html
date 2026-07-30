@@ -645,6 +645,12 @@ body.no-anim, .no-anim * { animation:none !important; transition:none !important
             <div class="func-card" onclick="openFunc('analytics')" data-func="analytics">
               <div class="func-icon">📊</div><div class="func-name">Analytics</div><div class="func-count">Usage</div>
             </div>
+            <div class="func-card" onclick="openFunc('optimize2')" data-func="optimize2">
+              <div class="func-icon">📈</div><div class="func-name">Optm V2</div><div class="func-count">Real-time</div>
+            </div>
+            <div class="func-card" onclick="openFunc('agent')" data-func="agent">
+              <div class="func-icon">🤖</div><div class="func-name">Agent</div><div class="func-count">AI Diag</div>
+            </div>
           </div>
           <!-- FUNCTION DETAIL -->
           <div id="func-detail" style="display:none;margin-top:4px">
@@ -654,6 +660,13 @@ body.no-anim, .no-anim * { animation:none !important; transition:none !important
             </div>
             <div id="func-detail-actions" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px"></div>
             <div id="func-detail-status" style="font-size:11px;color:var(--fg2)"></div>
+            <div id="agent-input-container" style="display:none;margin-top:4px">
+              <div style="display:flex;gap:4px">
+                <input type="text" id="agent-query" placeholder="Ask the agent..." style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:6px 10px;color:var(--fg);font-size:12px;outline:none" onkeydown="if(event.key==='Enter')askAgent()">
+                <button class="btn btn-primary" onclick="askAgent()" style="padding:4px 12px;font-size:11px">Ask</button>
+              </div>
+              <div id="agent-response" style="margin-top:4px;font-size:11px;color:var(--fg2);white-space:pre-wrap;background:var(--bg3);border-radius:4px;padding:8px;max-height:200px;overflow-y:auto"></div>
+            </div>
             <div id="mirror-container" style="display:none;margin-top:4px;text-align:center">
               <img id="mirror-img" style="max-width:100%;border-radius:6px;border:1px solid var(--border)">
               <div style="font-size:9px;color:var(--fg3);margin-top:2px">Tap Capture to refresh</div>
@@ -1254,6 +1267,14 @@ const FUNC_MENU = {
     actions:[
       {label:"📊 Full Analytics", action:"analytics_all"},
     ]},
+  optimize2: {name:"📈 Optm V2", desc:"Real-time CPU, RAM, wakelocks, temp, drainers",
+    actions:[
+      {label:"⚡ Full Analysis", action:"optimize_v2"},
+    ]},
+  agent: {name:"🤖 AI Agent", desc:"Ask anything about your device",
+    actions:[
+      {label:"💬 Ask Agent", action:"agent_ask"},
+    ]},
 };
 
 let currentFunc = null;
@@ -1454,6 +1475,26 @@ async function execFunc(action) {
         for (const [k,v] of Object.entries(r)) s += `${k.replace(/_/g,' ')}:\n  ${String(v).slice(0,200)}\n\n`;
         termLog(s || 'No analytics data', 'info');
       } else termLog('Failed', 'err');
+    // OPTIMIZATION V2
+    } else if (action === 'optimize_v2') {
+      const r = await api(`/api/optimize/v2?serial=${encodeURIComponent(serial)}`);
+      if (r) {
+        let s = '';
+        if (r.cpu) { s += '⚡ CPU LOAD:\n'; for (const [c,d] of Object.entries(r.cpu)) s += `  ${c}: ${d.load_pct}%\n`; }
+        if (r.ram_mb) s += `\n💾 RAM: ${r.ram_mb.memavailable||'?'}MB free / ${r.ram_mb.memtotal||'?'}MB total (${r.ram_used_pct||'?'}% used)\n`;
+        if (r.top_ram_processes) { s += '\n📋 TOP RAM:\n'; r.top_ram_processes.slice(0,5).forEach(p => s += `  ${p.name}: ${p.rss_mb}MB\n`); }
+        if (r.temperatures) { s += '\n🌡️ TEMPS:\n'; r.temperatures.slice(0,5).forEach(t => s += `  ${t}\n`); }
+        if (r.wakelocks) { s += '\n🔋 WAKELOCKS:\n'; r.wakelocks.slice(0,5).forEach(w => s += `  ${w}\n`); }
+        if (r.top_drainers) { s += '\n⚡ TOP DRAINERS:\n'; r.top_drainers.slice(0,5).forEach(d => s += `  ${d}\n`); }
+        if (r.largest_folders) { s += '\n📂 LARGEST:\n'; r.largest_folders.slice(0,5).forEach(f => s += `  ${f}\n`); }
+        termLog(s || 'No data', 'info');
+      } else termLog('Failed', 'err');
+    // AGENT
+    } else if (action === 'agent_ask') {
+      document.getElementById('agent-input-container').style.display = '';
+      document.getElementById('agent-response').innerHTML = '🤖 Ask me anything about your device!';
+      document.getElementById('agent-query').focus();
+      termLog('Agent ready — type your question', 'info');
     } else {
       termLog(`ℹ️ ${action} — feature coming soon`, 'info');
     }
@@ -1479,6 +1520,23 @@ function termLog(msg, type='output') {
 function clearTerm() {
   const log = document.getElementById('terminal-log');
   if (log) log.innerHTML = '<div class="term-line"><span class="term-info">⬢ Terminal cleared</span></div>';
+}
+
+async function askAgent() {
+  const q = document.getElementById('agent-query').value.trim();
+  if (!q) return;
+  const serial = selectedSerial || '';
+  const el = document.getElementById('agent-response');
+  el.innerHTML = '<span class="spinner anim-spin"></span> Thinking...';
+  termLog(`🤖 You: ${q}`, 'info');
+  const r = await api(`/api/agent?serial=${encodeURIComponent(serial)}&query=${encodeURIComponent(q)}`);
+  if (r && r.response) {
+    el.innerHTML = r.response.replace(/\n/g, '<br>');
+    termLog(`Agent: ${r.response.slice(0,100)}...`, 'ok');
+  } else {
+    el.innerHTML = 'No response';
+    termLog('Agent failed', 'err');
+  }
 }
 
 // ===== OPTIMIZATION =====
