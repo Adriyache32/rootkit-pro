@@ -1,0 +1,16 @@
+╔══════════════════════════════════════════════════╗
+║  REDMI NOTE 9 PRO - BOOTLOADER UNLOCK READY     ║
+║  Fecha: 2026-08-02                               ║
+║  Cooldown 168h completado                        ║
+║                                                  ║
+║  Ejecutar:                                       ║
+║  bash ~/.rootkit-pro/redmi-unlock-prep.sh        ║
+║                                                  ║
+║  Requisitos:                                     ║
+║  1. Teléfono en Fastboot (Volume- + Power)       ║
+║  2. USB conectado al Lenovo                      ║
+║  3. MiUnlockTool ya tiene login cacheado         ║
+║                                                  ║
+║  TWRP: Descargar de https://dl.twrp.me/joyeuse/ ║
+║  Magisk: ~/.rootkit-pro/../HDD/ROOTKIT-PRO/     ║
+╚══════════════════════════════════════════════════╝

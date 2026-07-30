@@ -1,0 +1,967 @@
+#!/bin/bash
+#============================================================
+# ROOT KIT PRO v2.1 - Universal Phone Root/Unlock Tool
+# GitHub Dark Theme / Nervai Style
+#============================================================
+
+set -euo pipefail
+
+# Cross-platform detection
+OS="$(uname -s 2>/dev/null || echo Windows)"
+if [[ "$OS" == MINGW* ]] || [[ "$OS" == CYGWIN* ]] || [[ "$OS" == MSYS* ]]; then
+    IS_WINDOWS=1
+    APP_DIR="$USERPROFILE/.rootkit-pro"
+    BACKUP_DIR="$USERPROFILE/ROOTKIT-Backups"
+else
+    IS_WINDOWS=0
+    APP_DIR="$HOME/.rootkit-pro"
+    BACKUP_DIR="$HOME/HDD-Backups/rootkit-backups"
+fi
+BLOCKED_DB="$APP_DIR/blocked_methods.json"
+LOG_FILE="$APP_DIR/rootkit.log"
+VERSION="2.0.0"
+
+# GitHub Dark Theme Colors
+BG='\033[48;5;235m'      # #0d1117
+FG='\033[38;5;252m'      # #c9d1d9
+DIM='\033[2m'
+BOLD='\033[1m'
+RESET='\033[0m'
+GREEN='\033[38;5;78m'    # #3fb950
+BLUE='\033[38;5;75m'     # #58a6ff
+PURPLE='\033[38;5;141m'  # #a371f7
+YELLOW='\033[38;5;179m'  # #d29922
+RED='\033[38;5;203m'     # #f85149
+BORDER='\033[38;5;240m'  # #30363d
+CYAN='\033[38;5;117m'    # #56d4dd
+WHITE='\033[38;5;255m'   # #ffffff
+
+mkdir -p "$APP_DIR"/{blocked,backups,logs,portable,webcache}
+touch "$LOG_FILE" 2>/dev/null
+
+log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE" 2>/dev/null; }
+
+box_line() { echo -e "${BORDER}────────────────────────────────────────────────────────────────${RESET}"; }
+box_line_thin() { echo -e "${BORDER}┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄${RESET}"; }
+
+header() {
+    echo -ne '\033[2J\033[H'
+    echo ""
+    echo -e "  ${BORDER}┌──────────────────────────────────────────────────────────────┐${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${PURPLE}${BOLD}███╗   ██╗${RESET} ${GREEN}${BOLD}██╗  ██╗${RESET} ${BLUE}${BOLD}███████╗${RESET} ${YELLOW}${BOLD}████████╗${RESET} ${RED}${BOLD}██╗   ██╗${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${PURPLE}${BOLD}████╗  ██║${RESET} ${GREEN}${BOLD}██║  ██║${RESET} ${BLUE}${BOLD}██╔════╝${RESET} ${YELLOW}${BOLD}╚══██╔══╝${RESET} ${RED}${BOLD}╚██╗ ██╔╝${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${PURPLE}${BOLD}██╔██╗ ██║${RESET} ${GREEN}${BOLD}███████║${RESET} ${BLUE}${BOLD}█████╗${RESET}      ${YELLOW}${BOLD}██║${RESET}     ${RED}${BOLD} ╚████╔╝ ${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${PURPLE}${BOLD}██║╚██╗██║${RESET} ${GREEN}${BOLD}██╔══██║${RESET} ${BLUE}${BOLD}██╔══╝${RESET}      ${YELLOW}${BOLD}██║${RESET}     ${RED}${BOLD}  ╚██╔╝  ${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${PURPLE}${BOLD}██║ ╚████║${RESET} ${GREEN}${BOLD}██║  ██║${RESET} ${BLUE}${BOLD}███████╗${RESET}     ${YELLOW}${BOLD}██║${RESET}     ${RED}${BOLD}   ██║   ${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${PURPLE}${BOLD}╚═╝  ╚═══╝${RESET} ${GREEN}${BOLD}╚═╝  ╚═╝${RESET} ${BLUE}${BOLD}╚══════╝${RESET}     ${YELLOW}${BOLD}╚═╝${RESET}     ${RED}${BOLD}   ╚═╝   ${RESET}"
+    echo -e "  ${BORDER}│${RESET}                                                              ${BORDER}│${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${DIM}Universal Phone Root / Unlock Tool${RESET}  ${DIM}v${VERSION}${RESET}                    ${BORDER}│${RESET}"
+    echo -e "  ${BORDER}└──────────────────────────────────────────────────────────────┘${RESET}"
+    echo ""
+}
+
+device_card() {
+    local brand="${1:-}" model="${2:-}" android="${3:-}" codename="${4:-}"
+    local imei="${5:-}" serial="${6:-}" bootloader="${7:-}" rooted="${8:-}" cpu="${9:-}"
+    echo -e "  ${BORDER}┌──────────────────────────────────────────────────────────────┐${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${BLUE}${BOLD}Device${RESET}                                                 ${BORDER}│${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${BORDER}────────────────────────────────────────────────────────────${RESET}  ${BORDER}│${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${DIM}Brand${RESET}      ${FG}${brand:-N/A}${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${DIM}Model${RESET}      ${FG}${model:-N/A}${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${DIM}Codename${RESET}   ${CYAN}${codename:-N/A}${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${DIM}Android${RESET}    ${GREEN}${android:-N/A}${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${DIM}CPU${RESET}        ${FG}${cpu:-N/A}${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${DIM}IMEI${RESET}       ${FG}${imei:-N/A}${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${DIM}Serial${RESET}     ${FG}${serial:-N/A}${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${DIM}Bootloader${RESET} ${bootloader:-${DIM}unknown${RESET}}"
+    echo -e "  ${BORDER}│${RESET}  ${DIM}Root${RESET}       ${rooted:-${DIM}unknown${RESET}}"
+    echo -e "  ${BORDER}└──────────────────────────────────────────────────────────────┘${RESET}"
+}
+
+menu_item() {
+    local num="$1" icon="$2" label="$3" desc="$4"
+    echo -e "  ${BORDER}│${RESET}  ${DIM}${num})${RESET}  ${icon}  ${WHITE}${BOLD}${label}${RESET}  ${DIM}${desc}${RESET}"
+}
+
+press_enter() {
+    echo ""
+    echo -e "  ${DIM}Press Enter to continue...${RESET}"
+    read -r
+}
+
+check_deps() {
+    local deps="adb fastboot curl jq"
+    local missing=""
+    for d in $deps; do
+        command -v $d &>/dev/null || missing="$missing $d"
+    done
+    if [ -n "$missing" ]; then
+        echo -e "  ${YELLOW}Installing:${missing}${RESET}"
+        echo '2013' | sudo -S pacman -S --needed $missing --noconfirm 2>/dev/null
+    fi
+}
+
+# === MULTI-DEVICE DETECTION ===
+detect_all() {
+    DEVICES=()
+    local adb_out=$(adb devices 2>/dev/null)
+    local lines=$(echo "$adb_out" | grep "device$" | grep -v "List of")
+    local count=0
+
+    echo -e "\n  ${DIM}Scanning USB devices...${RESET}"
+
+    if [ -n "$lines" ]; then
+        while IFS= read -r line; do
+            local s=$(echo "$line" | awk '{print $1}')
+            [ -z "$s" ] && continue
+            count=$((count + 1))
+            local b=$(adb -s "$s" shell getprop ro.product.brand 2>/dev/null | tr -d '\r')
+            local m=$(adb -s "$s" shell getprop ro.product.model 2>/dev/null | tr -d '\r')
+            local a=$(adb -s "$s" shell getprop ro.build.version.release 2>/dev/null | tr -d '\r')
+            local c=$(adb -s "$s" shell getprop ro.product.device 2>/dev/null | tr -d '\r')
+            local cpu=$(adb -s "$s" shell getprop ro.product.cpu.abi 2>/dev/null | tr -d '\r')
+
+            local imei=$(adb -s "$s" shell service call iphonesubinfo 1 2>/dev/null | awk -F "'" '{print $2}' | tr -d ' \n.' | head -c 15)
+            [ -z "$imei" ] && imei=$(adb -s "$s" shell settings get secure android_id 2>/dev/null | tr -d '\r')
+
+            local rt=$(adb -s "$s" shell "su -c id 2>/dev/null | grep -c uid=0" 2>/dev/null | tr -d '\r')
+            [ "$rt" = "1" ] && rt="${GREEN}YES${RESET}" || rt="${RED}NO${RESET}"
+
+            local bl=$(adb -s "$s" shell getprop ro.boot.flash.locked 2>/dev/null | tr -d '\r')
+            [ "$bl" = "0" ] && bl="${GREEN}Unlocked${RESET}" || [ "$bl" = "1" ] && bl="${YELLOW}Locked${RESET}" || bl="${DIM}Unknown${RESET}"
+
+            local bat=$(adb -s "$s" shell dumpsys battery 2>/dev/null | grep "level:" | awk '{print $2}' | tr -d '\r')
+
+            DEVICES+=("$s|$b|$m|$c|$a|$cpu|$imei|$bl|$rt|$bat")
+        done <<< "$lines"
+    fi
+
+    # Check fastboot too
+    local fb_out=$(fastboot devices 2>/dev/null)
+    if [ -n "$fb_out" ] && echo "$fb_out" | grep -qv "^$"; then
+        while IFS= read -r line; do
+            local s=$(echo "$line" | awk '{print $1}')
+            [ -z "$s" ] && continue
+            count=$((count + 1))
+            local p=$(fastboot -s "$s" getvar product 2>/dev/null | grep "product:" | awk '{print $2}' | tr -d '\r')
+            local bl_info=$(fastboot -s "$s" oem device-info 2>/dev/null)
+            local bl_fb="${YELLOW}Locked${RESET}"
+            echo "$bl_info" | grep -qi "unlocked.*true" && bl_fb="${GREEN}Unlocked${RESET}"
+            DEVICES+=("$s|$p|$p|$p|N/A|N/A|N/A (fastboot)|$bl_fb|N/A|")
+        done <<< "$fb_out"
+    fi
+
+    if [ $count -eq 0 ]; then
+        echo -e "  ${RED}No devices detected${RESET}"
+        echo -e "  ${DIM}Connect via USB and enable USB Debugging${RESET}"
+        return 1
+    fi
+
+    echo -e "  ${GREEN}${count} device(s) detected${RESET}"
+    echo ""
+    for entry in "${DEVICES[@]}"; do
+        IFS='|' read -r s b m c a cpu i bl rt bat <<< "$entry"
+        echo -e "  ${BORDER}┌────────────────────────────────────┐${RESET}"
+        echo -e "  ${BORDER}│${RESET} ${BLUE}${BOLD}${b} ${m}${RESET}"
+        echo -e "  ${BORDER}│${RESET} ${DIM}Serial:${RESET} ${FG}${s}${RESET}"
+        echo -e "  ${BORDER}│${RESET} ${DIM}Android:${RESET} ${GREEN}${a}${RESET}  ${DIM}CPU:${RESET} ${FG}${cpu}${RESET}"
+        echo -e "  ${BORDER}│${RESET} ${DIM}Bootloader:${RESET} ${bl}  ${DIM}Root:${RESET} ${rt}"
+        [ -n "$bat" ] && echo -e "  ${BORDER}│${RESET} ${DIM}Battery:${RESET} ${YELLOW}${bat}%${RESET}"
+        echo -e "  ${BORDER}└────────────────────────────────────┘${RESET}"
+    done
+
+    # Default to first device for legacy functions
+    local first="${DEVICES[0]}"
+    IFS='|' read -r serial brand model codename android cpu imei bootloader rooted battery <<< "$first"
+    return 0
+}
+
+# === BRAND-SPECIFIC UNLOCK METHODS ===
+get_unlock_methods() {
+    local brand_lower=$(echo "$brand" | tr '[:upper:]' '[:lower:]')
+    local methods=()
+
+    case "$brand_lower" in
+        xiaomi|redmi|poco)
+            methods=(
+                "Mi Unlock (official)|https://en.miui.com/unlock/download_en.html|65|xiaomi_mi_unlock"
+                "EDL Firehose|fastboot oem unlock|40|edl_firehose"
+                "Direct bootloader|fastboot flashing unlock|55|direct_unlock"
+            )
+            ;;
+        motorola|moto)
+            methods=(
+                "Motorola unlock (official)|https://motorola.com/unlockbootloader|50|motola_official"
+                "Fastboot OEM|fastboot oem unlock|45|fastboot_oem"
+                "EDL/QFIL|QFIL tool|35|edl_qfil"
+            )
+            ;;
+        samsung)
+            methods=(
+                "OEM Unlock (dev options)|Settings > Developer > OEM Unlock|70|samsung_oem"
+                "Heimdall (ODIN-like)|heimdall flash|55|heimdall"
+                "Download Mode + Odin|Odin3 tool|45|odin_mode"
+            )
+            ;;
+        apple|iphone)
+            methods=(
+                "checkra1n|https://checkra.in|60|checkrain"
+                "palera1n|https://palera.in|55|palera1n"
+                "Taurine / Dopamine|Unc0ver family|40|taurine"
+            )
+            ;;
+        huawei)
+            methods=(
+                "EMUI unlock|https://consumer.huawei.com/en/flash/unlock|35|huawei_emui"
+                "Fastboot oem|fastboot oem unlock|30|fastboot_huawei"
+                "EDL deep flash|Deep flash cable|25|deep_flash"
+            )
+            ;;
+        google|pixel)
+            methods=(
+                "Fastboot flashing unlock|fastboot flashing unlock|80|pixel_unlock"
+                "Android Flash Tool|https://flash.android.com|75|flash_tool"
+                "Factory Image|Google factory images|70|factory_image"
+            )
+            ;;
+        oneplus)
+            methods=(
+                "Fastboot unlock|fastboot oem unlock|75|oneplus_unlock"
+                "MSM Download Tool|MSM tool|50|msm_tool"
+                "Deep testing app|OnePlus community app|60|deep_testing"
+            )
+            ;;
+        *)
+            methods=(
+                "Fastboot OEM|fastboot oem unlock|30|fastboot_oem"
+                "Fastboot flashing|fastboot flashing unlock|25|fastboot_flashing"
+            )
+            ;;
+    esac
+    echo "${methods[@]}"
+}
+
+# === SHOW METHODS TABLE ===
+show_methods() {
+    local brand_lower=$(echo "$brand" | tr '[:upper:]' '[:lower:]')
+    local methods_str=$(get_unlock_methods)
+    local -a methods=($methods_str)
+
+    header
+    echo -e "  ${PURPLE}${BOLD}UNLOCK METHODS${RESET}  ${DIM}${brand} ${model}${RESET}"
+    box_line
+    echo ""
+    echo -e "  ${BORDER}│${RESET}  ${DIM}#   Method                          Success   Status${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${BORDER}────────────────────────────────────────────────────────────${RESET}"
+
+    local i=1
+    local available=()
+    for method_entry in "${methods[@]}"; do
+        IFS='|' read -r name url success tool <<< "$method_entry"
+
+        local status_icon=""
+        local status_color=""
+        if [[ "$url" == http* ]]; then
+            status_icon="${YELLOW}Verify${RESET}"
+            status_color="$YELLOW"
+        else
+            status_icon="${GREEN}Available${RESET}"
+            status_color="$GREEN"
+        fi
+        available+=("$method_entry")
+
+        local bar_color="$RED"
+        [ "$success" -ge 60 ] && bar_color="$GREEN"
+        [ "$success" -ge 35 ] && [ "$success" -lt 60 ] && bar_color="$YELLOW"
+
+        printf "  ${BORDER}│${RESET}  ${DIM}%d${RESET}   ${FG}%-32s${RESET}  ${bar_color}%3d%%${RESET}   %s\n" \
+            "$i" "$name" "$success" "$status_icon"
+        i=$((i + 1))
+    done
+
+    echo -e "  ${BORDER}│${RESET}  ${BORDER}────────────────────────────────────────────────────────────${RESET}"
+    echo -e "  ${BORDER}│${RESET}  ${DIM}Select a method number to see instructions or 0 for back${RESET}"
+    echo -e "  ${BORDER}└──────────────────────────────────────────────────────────────┘${RESET}"
+    echo ""
+    echo -ne "  ${BOLD}Method #:${RESET} "
+    read -r method_choice
+
+    if [ "$method_choice" = "0" ] || [ -z "$method_choice" ]; then
+        return
+    fi
+
+    local idx=$((method_choice - 1))
+    if [ $idx -lt 0 ] || [ $idx -ge ${#available[@]} ]; then
+        echo -e "  ${RED}Invalid option${RESET}"
+        press_enter
+        return
+    fi
+
+    IFS='|' read -r sel_name sel_url sel_success sel_tool <<< "${available[$idx]}"
+
+    header
+    echo -e "  ${BLUE}${BOLD}${sel_name}${RESET}"
+    box_line
+    echo ""
+    echo -e "  ${DIM}Success rate:${RESET} ${sel_success}%  ${DIM}Tool:${RESET} ${sel_tool}"
+    echo ""
+    echo -e "  ${YELLOW}${BOLD}Instructions:${RESET}"
+    echo ""
+
+    # Show instructions based on tool
+    case "$sel_tool" in
+        xiaomi_mi_unlock)
+            echo -e "  ${DIM}1.${RESET} Download Mi Unlock from en.miui.com/unlock"
+            echo -e "  ${DIM}2.${RESET} Bind Xiaomi account to device"
+            echo -e "  ${DIM}3.${RESET} Wait 168h (7 days) after binding"
+            echo -e "  ${DIM}4.${RESET} Boot to fastboot: hold VolDown+Power"
+            echo -e "  ${DIM}5.${RESET} Open Mi Unlock tool and follow prompts"
+            echo -e "  ${DIM}6.${RESET} Backup first - unlock wipes all data"
+            ;;
+        direct_unlock)
+            echo -e "  ${DIM}1.${RESET} Enable Developer Options + OEM Unlock"
+            echo -e "  ${DIM}2.${RESET} Enable USB Debugging"
+            echo -e "  ${DIM}3.${RESET} Run: adb reboot bootloader"
+            echo -e "  ${DIM}4.${RESET} Run: fastboot flashing unlock"
+            echo -e "  ${DIM}5.${RESET} Confirm on phone with volume keys"
+            echo -e "  ${DIM}6.${RESET} Run: fastboot reboot"
+            ;;
+        fastboot_oem)
+            echo -e "  ${DIM}1.${RESET} Enable Developer Options + OEM Unlock"
+            echo -e "  ${DIM}2.${RESET} Run: adb reboot bootloader"
+            echo -e "  ${DIM}3.${RESET} Run: fastboot oem unlock"
+            echo -e "  ${DIM}4.${RESET} Confirm on phone screen"
+            echo -e "  ${DIM}5.${RESET} Run: fastboot reboot"
+            ;;
+        motola_official)
+            echo -e "  ${DIM}1.${RESET} Go to motorola.com/unlockbootloader"
+            echo -e "  ${DIM}2.${RESET} Create account and request unlock code"
+            echo -e "  ${DIM}3.${RESET} Wait for email with unlock code (24-48h)"
+            echo -e "  ${DIM}4.${RESET} Boot to fastboot: adb reboot bootloader"
+            echo -e "  ${DIM}5.${RESET} Run: fastboot oem get_unlock_data"
+            echo -e "  ${DIM}6.${RESET} Submit data to website, get code"
+            echo -e "  ${DIM}7.${RESET} Run: fastboot oem unlock UNLOCK_CODE"
+            ;;
+        samsung_oem)
+            echo -e "  ${DIM}1.${RESET} Settings > About Phone > Software Info"
+            echo -e "  ${DIM}2.${RESET} Tap Build Number 7 times"
+            echo -e "  ${DIM}3.${RESET} Developer Options > OEM Unlock > Enable"
+            echo -e "  ${DIM}4.${RESET} Power off, connect USB (Download Mode)"
+            echo -e "  ${DIM}5.${RESET} Hold VolUp+VolDown + connect USB"
+            echo -e "  ${DIM}6.${RESET} Press VolUp to confirm unlock"
+            ;;
+        pixel_unlock|oneplus_unlock)
+            echo -e "  ${DIM}1.${RESET} Enable Developer Options + OEM Unlock"
+            echo -e "  ${DIM}2.${RESET} Run: adb reboot bootloader"
+            echo -e "  ${DIM}3.${RESET} Run: fastboot flashing unlock"
+            echo -e "  ${DIM}4.${RESET} Confirm on device"
+            echo -e "  ${DIM}5.${RESET} Run: fastboot reboot"
+            ;;
+        *)
+            if [[ "$sel_url" == http* ]]; then
+                echo -e "  ${DIM}Visit:${RESET} ${sel_url}"
+            fi
+            echo -e "  ${DIM}No detailed instructions available${RESET}"
+            ;;
+    esac
+
+    echo ""
+    box_line
+    echo ""
+    echo -ne "  ${YELLOW}Execute automatically? (y/n):${RESET} "
+    read -r auto_choice
+    if [ "$auto_choice" = "y" ] || [ "$auto_choice" = "Y" ]; then
+        echo -e "  ${CYAN}Executing ${sel_tool}...${RESET}"
+        case "$sel_tool" in
+            direct_unlock|fastboot_oem|pixel_unlock|oneplus_unlock|fastboot_huawei)
+                local cmd=""
+                [ "$sel_tool" = "direct_unlock" ] && cmd="fastboot flashing unlock"
+                [ "$sel_tool" = "fastboot_oem" ] && cmd="fastboot oem unlock"
+                [ "$sel_tool" = "pixel_unlock" ] && cmd="fastboot flashing unlock"
+                [ "$sel_tool" = "oneplus_unlock" ] && cmd="fastboot oem unlock"
+                [ "$sel_tool" = "fastboot_huawei" ] && cmd="fastboot oem unlock"
+                echo -e "  ${DIM}Running:${RESET} ${cmd}"
+                eval "$cmd" 2>&1
+                echo -e "  ${GREEN}Done!${RESET}"
+                ;;
+            *)
+                echo -e "  ${YELLOW}This method requires manual steps or GUI tool${RESET}"
+                ;;
+        esac
+        press_enter
+    fi
+}
+
+# === FULL BACKUP ===
+full_backup() {
+    local backup_path="$BACKUP_DIR/${brand}_${model}_$(date +%Y%m%d_%H%M%S)"
+    mkdir -p "$backup_path"/{apps,contacts,photos,files,sms,settings,system}
+
+    header
+    echo -e "  ${BLUE}${BOLD}FULL BACKUP${RESET}  ${DIM}${brand} ${model}${RESET}"
+    box_line
+    echo -e "  ${DIM}Destination: ${FG}${backup_path}${RESET}"
+    echo ""
+
+    echo -e "  ${BORDER}[1/7]${RESET} Backing up apps..."
+    local app_list=$(adb shell pm list packages -3 2>/dev/null)
+    local app_count=$(echo "$app_list" | wc -l)
+    echo "$app_list" > "$backup_path/apps/package_list.txt"
+    mkdir -p "$backup_path/apps/apks"
+    local count=0
+    echo "$app_list" | while read -r line; do
+        local pkg=$(echo "$line" | sed 's/package://')
+        local apk_path=$(adb shell pm path "$pkg" 2>/dev/null | head -1 | sed 's/package://')
+        if [ -n "$apk_path" ]; then
+            adb pull "$apk_path" "$backup_path/apps/apks/" 2>/dev/null
+            count=$((count + 1))
+            printf "\r  ${DIM}[%d/%d]${RESET} Backing up apps..." "$count" "$app_count"
+        fi
+    done
+    echo -e "\n  ${GREEN}  ${app_count} apps backed up${RESET}"
+
+    echo -e "  ${BORDER}[2/7]${RESET} Backing up contacts..."
+    adb shell content query --uri content://contacts/phones/ 2>/dev/null > "$backup_path/contacts/contacts.txt" || \
+        adb pull /data/data/com.android.providers.contacts/ "$backup_path/contacts/db/" 2>/dev/null
+    echo -e "  ${GREEN}  Done${RESET}"
+
+    echo -e "  ${BORDER}[3/7]${RESET} Backing up photos..."
+    adb pull /sdcard/DCIM/ "$backup_path/photos/DCIM/" 2>/dev/null
+    adb pull /sdcard/Pictures/ "$backup_path/photos/Pictures/" 2>/dev/null
+    echo -e "  ${GREEN}  Done${RESET}"
+
+    echo -e "  ${BORDER}[4/7]${RESET} Backing up downloads..."
+    adb pull /sdcard/Download/ "$backup_path/files/Downloads/" 2>/dev/null
+    echo -e "  ${GREEN}  Done${RESET}"
+
+    echo -e "  ${BORDER}[5/7]${RESET} Backing up SMS..."
+    adb shell content query --uri content://sms/ 2>/dev/null > "$backup_path/sms/sms_backup.txt"
+    echo -e "  ${GREEN}  Done${RESET}"
+
+    echo -e "  ${BORDER}[6/7]${RESET} Backing up settings..."
+    adb shell settings list system > "$backup_path/settings/system.txt" 2>/dev/null
+    adb shell settings list secure > "$backup_path/settings/secure.txt" 2>/dev/null
+    adb shell settings list global > "$backup_path/settings/global.txt" 2>/dev/null
+    adb shell getprop > "$backup_path/system/properties.txt" 2>/dev/null
+    echo -e "  ${GREEN}  Done${RESET}"
+
+    echo -e "  ${BORDER}[7/7]${RESET} Backing up internal storage..."
+    adb pull /sdcard/Documents/ "$backup_path/files/Documents/" 2>/dev/null
+    adb pull /sdcard/Music/ "$backup_path/files/Music/" 2>/dev/null
+    adb pull /sdcard/Movies/ "$backup_path/files/Movies/" 2>/dev/null
+    echo -e "  ${GREEN}  Done${RESET}"
+
+    local size=$(du -sh "$backup_path" 2>/dev/null | awk '{print $1}')
+
+    echo ""
+    box_line
+    echo -e "  ${GREEN}${BOLD}BACKUP COMPLETED${RESET}"
+    echo -e "  ${DIM}Location:${RESET} ${FG}${backup_path}${RESET}"
+    echo -e "  ${DIM}Size:${RESET}     ${FG}${size}${RESET}"
+    echo -e "  ${DIM}Apps:${RESET}     ${FG}${app_count}${RESET}"
+    box_line
+
+    cat > "$backup_path/RESTORE.sh" << 'RESTORE'
+#!/bin/bash
+echo "=== ROOT KIT PRO - RESTORE ==="
+echo "This will restore apps and data from backup"
+read -p "Continue? (y/n): " confirm
+[ "$confirm" != "y" ] && exit 0
+
+echo "Restoring APKs..."
+for apk in apps/apks/*.apk; do
+    adb install -r "$apk" 2>/dev/null && echo "  OK: $(basename $apk)" || echo "  FAIL: $(basename $apk)"
+done
+
+echo "Restoring settings..."
+adb shell settings import system settings/system.txt 2>/dev/null
+adb shell settings import secure settings/secure.txt 2>/dev/null
+adb shell settings import global settings/global.txt 2>/dev/null
+
+echo "Restore complete"
+RESTORE
+    chmod +x "$backup_path/RESTORE.sh"
+    log "Backup completed: $backup_path ($size, $app_count apps)"
+}
+
+# === RISK ANALYSIS ===
+risk_analysis() {
+    header
+    echo -e "  ${YELLOW}${BOLD}RISK ANALYSIS${RESET}  ${DIM}${brand} ${model}${RESET}"
+    box_line
+    echo ""
+
+    local risks=()
+    local score=0
+
+    local battery=$(adb shell dumpsys battery 2>/dev/null | grep "level:" | awk '{print $2}' | tr -d '\r')
+    if [ -n "$battery" ]; then
+        if [ "$battery" -lt 30 ]; then
+            risks+=("  ${RED}BATTERY LOW${RESET} ($battery%) - Minimum 30% required")
+            score=$((score + 30))
+        elif [ "$battery" -lt 50 ]; then
+            risks+=("  ${YELLOW}BATTERY MEDIUM${RESET} ($battery%) - Recommended 50%+")
+            score=$((score + 10))
+        else
+            echo -e "  ${GREEN}Battery: ${battery}%${RESET}"
+        fi
+    fi
+
+    local oem=$(adb shell settings get global oem_unlock_enabled 2>/dev/null | tr -d '\r')
+    if [ "$oem" = "1" ]; then
+        echo -e "  ${GREEN}OEM Unlock: enabled${RESET}"
+    elif [ "$oem" = "null" ] || [ -z "$oem" ]; then
+        risks+=("  ${YELLOW}OEM Unlock: verify in Developer Options${RESET}")
+        score=$((score + 5))
+    else
+        risks+=("  ${RED}OEM Unlock: DISABLED - Enable in Developer Options${RESET}")
+        score=$((score + 25))
+    fi
+
+    local frp=$(adb shell getprop ro.frp.pst 2>/dev/null | tr -d '\r')
+    if [ -n "$frp" ]; then
+        risks+=("  ${YELLOW}FRP active${RESET} - Factory reset will be required")
+        score=$((score + 15))
+    fi
+
+    local bl=$(adb shell getprop ro.boot.flash.locked 2>/dev/null | tr -d '\r')
+    if [ "$bl" = "1" ]; then
+        risks+=("  ${YELLOW}Bootloader LOCKED${RESET} - Requires Mi Unlock")
+        score=$((score + 15))
+    else
+        echo -e "  ${GREEN}Bootloader: unlocked${RESET}"
+    fi
+
+    local dm_verify=$(adb shell getprop ro.boot.verifiedbootstate 2>/dev/null | tr -d '\r')
+    if [ "$dm_verify" = "verified" ]; then
+        risks+=("  ${YELLOW}DM-Verity active${RESET} - May interfere with root")
+        score=$((score + 10))
+    fi
+
+    if [ ${#risks[@]} -eq 0 ]; then
+        echo -e "  ${GREEN}${BOLD}No risks detected${RESET}"
+    else
+        for risk in "${risks[@]}"; do
+            echo -e "$risk"
+        done
+    fi
+
+    echo ""
+    box_line
+    echo -e "  ${DIM}Risk Score: ${RESET}${FG}${score}/100${RESET}"
+    if [ $score -lt 25 ]; then
+        echo -e "  ${GREEN}${BOLD}LOW RISK${RESET} - Proceed with confidence"
+    elif [ $score -lt 50 ]; then
+        echo -e "  ${YELLOW}${BOLD}MEDIUM RISK${RESET} - Caution recommended"
+    else
+        echo -e "  ${RED}${BOLD}HIGH RISK${RESET} - Review before proceeding"
+    fi
+    box_line
+    log "Risk analysis: score=$score brand=$brand model=$model"
+}
+
+# === PANIC BUTTON ===
+panic_button() {
+    header
+    echo -e "  ${RED}${BOLD}EMERGENCY PANIC${RESET}"
+    box_line
+    echo ""
+    echo -e "  ${DIM}Disconnecting device and clearing traces...${RESET}"
+    adb kill-server 2>/dev/null
+    fastboot reboot 2>/dev/null
+    echo -e "  ${GREEN}ADB server killed${RESET}"
+    echo -e "  ${GREEN}Device rebooted to system${RESET}"
+    echo -e "  ${DIM}Log cleared: ${LOG_FILE}${RESET}"
+    > "$LOG_FILE" 2>/dev/null
+    log "PANIC: Emergency disconnect executed"
+    box_line
+}
+
+# === BLOCKED METHODS ===
+show_blocked() {
+    header
+    echo -e "  ${RED}${BOLD}BLOCKED METHODS${RESET}"
+    box_line
+    echo ""
+
+    if [ -d "$APP_DIR/blocked" ]; then
+        local files=$(ls "$APP_DIR"/blocked/blocked_*.jsonl 2>/dev/null | wc -l)
+        if [ "$files" -gt 0 ]; then
+            for f in "$APP_DIR"/blocked/blocked_*.jsonl; do
+                echo -e "  ${DIM}File:${RESET} $(basename $f)"
+                cat "$f" 2>/dev/null | while read -r line; do
+                    local method=$(echo "$line" | jq -r '.method // "unknown"' 2>/dev/null)
+                    local reason=$(echo "$line" | jq -r '.reason // "no reason"' 2>/dev/null)
+                    local date=$(echo "$line" | jq -r '.date // "unknown"' 2>/dev/null)
+                    echo -e "    ${RED}X${RESET} ${FG}${method}${RESET}  ${DIM}${reason} (${date})${RESET}"
+                done
+                echo ""
+            done
+        else
+            echo -e "  ${DIM}No blocked methods${RESET}"
+        fi
+    fi
+    box_line
+}
+
+# === SHOW LOGS ===
+show_logs() {
+    header
+    echo -e "  ${CYAN}${BOLD}ACTIVITY LOG${RESET}"
+    box_line
+    echo ""
+    if [ -f "$LOG_FILE" ]; then
+        tail -30 "$LOG_FILE" 2>/dev/null | while read -r line; do
+            echo -e "  ${DIM}${line}${RESET}"
+        done
+    else
+        echo -e "  ${DIM}No logs yet${RESET}"
+    fi
+    box_line
+}
+
+# === USB SYNC ===
+sync_usb() {
+    header
+    echo -e "  ${CYAN}${BOLD}USB SYNC${RESET}"
+    box_line
+    echo ""
+
+    local usb_mount=""
+    for mp in /media/$(whoami)/* /mnt/*; do
+        if [ -d "$mp" ] && [ -w "$mp" ]; then
+            usb_mount="$mp"
+            break
+        fi
+    done
+
+    if [ -n "$usb_mount" ]; then
+        echo -e "  ${GREEN}USB found: ${usb_mount}${RESET}"
+        mkdir -p "$usb_mount/rootkit-pro"
+        cp "$0" "$usb_mount/rootkit-pro/rootkit-portable.sh"
+        chmod +x "$usb_mount/rootkit-pro/rootkit-portable.sh"
+        cp -r "$APP_DIR/blocked" "$usb_mount/rootkit-pro/" 2>/dev/null
+        echo -e "  ${GREEN}USB synced${RESET}"
+    else
+        echo -e "  ${YELLOW}No USB with ROOTKIT found${RESET}"
+    fi
+    box_line
+}
+
+# === USB ANALYZER (Secret) ===
+usb_analyzer() {
+    header
+    echo -e "  ${PURPLE}${BOLD}USB ANALYZER${RESET}  ${DIM}All connected USB devices${RESET}"
+    box_line
+    echo ""
+    
+    if command -v lsusb &>/dev/null; then
+        local count=0
+        while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            count=$((count + 1))
+            local parts=()
+            for p in $line; do parts+=("$p"); done
+            local vid_pid="${parts[5]:-}"
+            local desc="${parts[@]:6}"
+            local vid="${vid_pid%%:*}"
+            local pid="${vid_pid##*:}"
+            
+            # Determine type icon
+            local icon="❓"
+            local type_name="other"
+            local d="${desc,,}"
+            case "$d" in
+                *charg*|*power*|*battery*) icon="🔌"; type_name="charger" ;;
+                *audio*|*headphone*|*headset*|*speaker*|*microphon*|*sound*) icon="🎧"; type_name="audio" ;;
+                *hub*|*root_hub*) icon="🔗"; type_name="hub" ;;
+                *keyboard*|*keypad*) icon="⌨️"; type_name="keyboard" ;;
+                *mouse*|*pointer*) icon="🖱️"; type_name="mouse" ;;
+                *storage*|*flash*|*disk*|*drive*|*mass*) icon="💾"; type_name="storage" ;;
+                *camera*|*webcam*|*video*) icon="📷"; type_name="camera" ;;
+                *bluetooth*|*bt*) icon="🔵"; type_name="bluetooth" ;;
+                *wifi*|*wireless*|*network*|*ether*) icon="🌐"; type_name="network" ;;
+                *printer*|*scanner*) icon="🖨️"; type_name="printer" ;;
+                *phone*|*android*|*adb*|*fastboot*|*qualcomm*) icon="📱"; type_name="phone" ;;
+                *game*|*control*|*joystick*|*xbox*) icon="🎮"; type_name="controller" ;;
+                *card*|*reader*) icon="💳"; type_name="card_reader" ;;
+                *nvidia*|*display*|*monitor*) icon="🖥️"; type_name="display" ;;
+                *) icon="❓"; type_name="other" ;;
+            esac
+            
+            echo -e "  ${icon}  ${BLUE}${type_name}${RESET}  ${FG}${desc:-Unknown}${RESET}  ${DIM}${vid_pid}${RESET}"
+            echo -e "      ${DIM}Bus ${parts[1]} Device ${parts[3]%:}${RESET}"
+        done < <(lsusb 2>/dev/null)
+        
+        echo ""
+        box_line
+        echo -e "  ${GREEN}Total: ${count} USB device(s)${RESET}"
+    else
+        local sys_count=0
+        for d in /sys/bus/usb/devices/*/product; do
+            [ -f "$d" ] || continue
+            sys_count=$((sys_count + 1))
+            local prod=$(cat "$d" 2>/dev/null)
+            local mf=$(cat "$(dirname $d)/manufacturer" 2>/dev/null)
+            local spd=$(cat "$(dirname $d)/speed" 2>/dev/null)
+            echo -e "  ${FG}${mf:-Unknown} ${prod:-Unknown}${RESET}  ${DIM}${spd:+${spd}Mbps}${RESET}"
+        done
+        box_line
+        echo -e "  ${GREEN}Total: ${sys_count} USB device(s)${RESET}"
+    fi
+    
+    box_line
+}
+
+# === PREMIUM MENU ===
+premium_menu() {
+    header
+    echo -e "  ${YELLOW}${BOLD}👑 ROOT KIT PRO PREMIUM${RESET}"
+    box_line
+    echo ""
+    echo -e "  ${DIM}Unlock all features: Fastboot, Recovery, Shizuku,${RESET}"
+    echo -e "  ${DIM}Device Details, Unlock Cooldown, EDL Mode, ...${RESET}"
+    echo ""
+    echo -e "  ${YELLOW}Pricing:${RESET}"
+    echo -e "  ${FG}  Monthly:  \$3/mo${RESET}"
+    echo -e "  ${FG}  Yearly:   \$30/yr (save \$6)${RESET}"
+    echo -e "  ${FG}  Lifetime: \$60 once${RESET}"
+    echo ""
+    echo -e "  ${DIM}Send payment to: adriyache@pal.com (PayPal)${RESET}"
+    echo -e "  ${DIM}Or contact @Adriyache32 on Telegram${RESET}"
+    echo ""
+    echo -ne "  ${BOLD}Enter premium key (or 0 to skip):${RESET} "
+    read -r pkey
+    if [ "$pkey" = "0" ] || [ -z "$pkey" ]; then
+        return
+    fi
+    # Use API to validate
+    local r=$(curl -s "http://localhost:20229/api/premium/validate?key=$pkey" 2>/dev/null || echo '{"valid":false}')
+    if echo "$r" | grep -q '"valid": true'; then
+        local tier=$(echo "$r" | python3 -c "import sys,json; print(json.load(sys.stdin).get('tier',''))" 2>/dev/null)
+        echo -e "  ${GREEN}✓ Premium ${tier} activated!${RESET}"
+        mkdir -p "$APP_DIR"
+        echo "$pkey" > "$APP_DIR/.premium_key"
+    else
+        echo -e "  ${RED}✗ Invalid key${RESET}"
+    fi
+}
+
+# === POWER ACTIONS ===
+power_actions() {
+    local pkey=""
+    [ -f "$APP_DIR/.premium_key" ] && pkey=$(cat "$APP_DIR/.premium_key" 2>/dev/null) || true
+    local prem_status=$(curl -s "http://localhost:20229/api/premium/status?key=$pkey" 2>/dev/null || echo '{"active":false}')
+    if ! echo "$prem_status" | grep -q '"active": true'; then
+        echo -e "  ${YELLOW}🔒 Premium required for Power Actions${RESET}"
+        echo -e "  ${DIM}Press P for Premium menu${RESET}"
+        return
+    fi
+
+    local serial="${DEVICES[0]%%|*}"
+    header
+    echo -e "  ${CYAN}${BOLD}⚡ POWER ACTIONS${RESET}"
+    box_line
+    echo ""
+    echo -e "  ${DIM}Device: ${serial}${RESET}"
+    echo ""
+    echo -e "  ${FG} 1) ${BOLD}Fastboot${RESET}       ${DIM}Reboot to bootloader${RESET}"
+    echo -e "  ${FG} 2) ${BOLD}Recovery${RESET}       ${DIM}Reboot to recovery${RESET}"
+    echo -e "  ${FG} 3) ${BOLD}Shizuku${RESET}        ${DIM}Start Shizuku service${RESET}"
+    echo -e "  ${FG} 4) ${BOLD}Dhizuku${RESET}        ${DIM}Start Dhizuku service${RESET}"
+    echo -e "  ${FG} 5) ${BOLD}EDL Mode${RESET}       ${DIM}Emergency Download mode${RESET}"
+    echo -e "  ${FG} 6) ${BOLD}Soft Reboot${RESET}    ${DIM}Restart system server${RESET}"
+    echo -e "  ${FG} 7) ${BOLD}Screenshot${RESET}     ${DIM}Take remote screenshot${RESET}"
+    echo -e "  ${FG} 0) ${DIM}Back${RESET}"
+    echo ""
+    echo -ne "  ${BOLD}Select action:${RESET} "
+    read -r act
+    local acts=("fastboot" "recovery" "shizuku" "dhizuku" "edl" "soft-reboot" "screenshot")
+    if [ "$act" -ge 1 ] && [ "$act" -le 7 ] 2>/dev/null; then
+        local action="${acts[$((act-1))]}"
+        echo -e "  ${DIM}Executing ${action}...${RESET}"
+        local r=$(curl -s "http://localhost:20229/api/action?action=${action}&serial=${serial}" 2>/dev/null || echo '{"status":"error","msg":"API unavailable"}')
+        if echo "$r" | grep -q '"status": "ok"'; then
+            local msg=$(echo "$r" | python3 -c "import sys,json; print(json.load(sys.stdin).get('msg','Done'))" 2>/dev/null)
+            echo -e "  ${GREEN}✓ ${msg}${RESET}"
+        else
+            local err=$(echo "$r" | python3 -c "import sys,json; print(json.load(sys.stdin).get('msg','Failed'))" 2>/dev/null)
+            echo -e "  ${RED}✗ ${err}${RESET}"
+        fi
+    fi
+}
+
+# === DEVICE DETAILS ===
+device_details() {
+    local pkey=""
+    [ -f "$APP_DIR/.premium_key" ] && pkey=$(cat "$APP_DIR/.premium_key" 2>/dev/null) || true
+    local prem_status=$(curl -s "http://localhost:20229/api/premium/status?key=$pkey" 2>/dev/null || echo '{"active":false}')
+    if ! echo "$prem_status" | grep -q '"active": true'; then
+        echo -e "  ${YELLOW}🔒 Premium required for Device Details${RESET}"
+        echo -e "  ${DIM}Press P for Premium menu${RESET}"
+        return
+    fi
+
+    local serial="${DEVICES[0]%%|*}"
+    header
+    echo -e "  ${BLUE}${BOLD}📊 DEVICE DETAILS${RESET}"
+    box_line
+    echo ""
+    local r=$(curl -s "http://localhost:20229/api/device-details?serial=${serial}" 2>/dev/null || echo '{}')
+    if [ -z "$r" ] || [ "$r" = "{}" ]; then
+        echo -e "  ${RED}Failed to get device details${RESET}"
+        return
+    fi
+    # RAM
+    local ram=$(echo "$r" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f\"{d.get('ram_total_gb','?')}GB ({d.get('ram_avail_gb','?')}GB free)\")" 2>/dev/null)
+    [ -n "$ram" ] && echo -e "  ${CYAN}RAM:${RESET}     $ram"
+    # Storage
+    local st=$(echo "$r" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f\"{d.get('storage_used','?')}/{d.get('storage_total','?')} ({d.get('storage_avail_gb','?')}GB free)\")" 2>/dev/null)
+    [ -n "$st" ] && echo -e "  ${GREEN}Storage:${RESET}  $st"
+    # Battery
+    local bt=$(echo "$r" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f\"{d.get('battery_temp','?')}°C {d.get('battery_voltage','?')}V\");" 2>/dev/null)
+    [ -n "$bt" ] && echo -e "  ${YELLOW}Battery:${RESET}  $bt"
+    # CPU
+    local cpu=$(echo "$r" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('cpu_cores','?'))" 2>/dev/null)
+    [ -n "$cpu" ] && echo -e "  ${PURPLE}CPU:${RESET}      ${cpu} cores"
+    # Screen
+    local scr=$(echo "$r" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f\"{d.get('screen','?')} @ {d.get('screen_density','?')}dpi\")" 2>/dev/null)
+    [ -n "$scr" ] && echo -e "  ${FG}Screen:${RESET}    $scr"
+    # Security patch
+    local sec=$(echo "$r" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('security_patch','?'))" 2>/dev/null)
+    [ -n "$sec" ] && echo -e "  ${DIM}Security:${RESET}  $sec"
+    # Unlock cooldown
+    local unlock_text=$(echo "$r" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+u=d.get('unlock',{})
+s=u.get('status','')
+rt=u.get('remaining_text','')
+pct=u.get('progress_pct','')
+if s: print(f\"  {s=='unlockable' and '\033[32m' or '\033[33m'}🔓 Unlock: {rt}\")
+if pct: print(f\"  \033[90m  {pct}% complete\")
+" 2>/dev/null)
+    [ -n "$unlock_text" ] && echo -e "$unlock_text"
+    box_line
+}
+
+# === MAIN MENU ===
+main_menu() {
+    check_deps
+
+    while true; do
+        header
+        echo -e "  ${BORDER}│${RESET}  ${DIM}What would you like to do?${RESET}"
+        echo ""
+        menu_item "1" "${BLUE}[+]" "Detect Devices" "Scan USB for all phones"
+        menu_item "2" "${GREEN}[>]" "Unlock Methods" "View available unlock options"
+        menu_item "3" "${CYAN}[>]" "Full Backup" "Backup apps, data, photos, SMS"
+        menu_item "4" "${YELLOW}[!]" "Risk Analysis" "Check brick/unlock risks"
+        menu_item "5" "${RED}[X]" "Panic Button" "Emergency disconnect & clear"
+        menu_item "6" "${PURPLE}[>]" "Sync USB" "Copy tools to USB drive"
+        menu_item "7" "${DIM}[>]" "Blocked Methods" "View blocked unlock methods"
+        menu_item "8" "${DIM}[>]" "Activity Logs" "View recent activity"
+        menu_item "P" "${YELLOW}[$]" "Premium" "Unlock all features (key required)"
+        menu_item "A" "${CYAN}[>]" "Power Actions" "Fastboot, Recovery, Shizuku, EDL"
+        menu_item "D" "${BLUE}[>]" "Device Details" "RAM, Storage, Unlock cooldown"
+        menu_item "9" "${PURPLE}[?]" "USB Analyzer" "Scan ALL USB devices (hidden)"
+        menu_item "0" "${RED}[>]" "Exit" "Close ROOT KIT PRO"
+        echo ""
+        echo -e "  ${BORDER}└──────────────────────────────────────────────────────────────┘${RESET}"
+        echo ""
+        echo -ne "  ${BOLD}Select option:${RESET} "
+        read -r opt
+
+        case $opt in
+            1)
+                detect_all
+                press_enter
+                ;;
+            2)
+                if [ ${#DEVICES[@]} -eq 0 ]; then
+                    echo -e "\n  ${YELLOW}Detect devices first (option 1)${RESET}"
+                    press_enter
+                    continue
+                fi
+                methods=$(show_methods)
+                press_enter
+                ;;
+            3)
+                if [ ${#DEVICES[@]} -eq 0 ]; then
+                    echo -e "\n  ${YELLOW}Detect devices first (option 1)${RESET}"
+                    press_enter
+                    continue
+                fi
+                full_backup
+                press_enter
+                ;;
+            4)
+                if [ ${#DEVICES[@]} -eq 0 ]; then
+                    echo -e "\n  ${YELLOW}Detect devices first (option 1)${RESET}"
+                    press_enter
+                    continue
+                fi
+                risk_analysis
+                press_enter
+                ;;
+            5)
+                panic_button
+                press_enter
+                ;;
+            6)
+                sync_usb
+                press_enter
+                ;;
+            7)
+                show_blocked
+                press_enter
+                ;;
+            8)
+                show_logs
+                press_enter
+                ;;
+            [Pp])
+                premium_menu
+                press_enter
+                ;;
+            [Aa])
+                if [ ${#DEVICES[@]} -eq 0 ]; then
+                    echo -e "\n  ${YELLOW}Detect devices first (option 1)${RESET}"
+                    press_enter
+                    continue
+                fi
+                power_actions
+                press_enter
+                ;;
+            [Dd])
+                if [ ${#DEVICES[@]} -eq 0 ]; then
+                    echo -e "\n  ${YELLOW}Detect devices first (option 1)${RESET}"
+                    press_enter
+                    continue
+                fi
+                device_details
+                press_enter
+                ;;
+            9)
+                usb_analyzer
+                press_enter
+                ;;
+            0|q|Q)
+                echo -e "\n  ${GREEN}Goodbye!${RESET}\n"
+                exit 0
+                ;;
+            *)
+                echo -e "\n  ${RED}Invalid option${RESET}"
+                sleep 1
+                ;;
+        esac
+    done
+}
+
+# === ENTRY POINT ===
+if [ "${1:-}" = "portable" ]; then
+    echo -e "  ${CYAN}ROOT KIT PRO - Portable Mode${RESET}"
+    detect_all
+else
+    main_menu
+fi

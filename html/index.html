@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROOT KIT PRO</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+:root {
+  --bg: #0d1117; --bg2: #161b22; --bg3: #1c2128; --bg4: #21262d;
+  --border: #30363d; --border2: #484f58;
+  --fg: #c9d1d9; --fg2: #8b949e; --fg3: #6e7681;
+  --green: #3fb950; --green2: #238636; --green3: #0d4423;
+  --blue: #58a6ff; --blue2: #1f6feb; --blue3: #0c2d6b;
+  --purple: #a371f7; --purple2: #8957e5; --purple3: #3b1f7e;
+  --yellow: #d29922; --yellow2: #9e6a03;
+  --red: #f85149; --red2: #da3633; --red3: #5c0d11;
+  --cyan: #56d4dd;
+  --glow: 0 0 20px rgba(88,166,255,0.15);
+  --anim-speed: 1;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: 'Inter', -apple-system, sans-serif;
+  min-height: 100vh; overflow-x: hidden;
+}
+body.no-anim, .no-anim * { animation:none !important; transition:none !important; }
+
+/* ===== ANIMATED BACKGROUND (optimized) ===== */
+.anim-bg-grid {
+  position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0;
+  background-image:
+    linear-gradient(rgba(48,54,61,0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(48,54,61,0.25) 1px, transparent 1px);
+  background-size: 40px 40px;
+  will-change: transform;
+}
+.anim-bg-grid.move { animation: gridMove 20s linear infinite; }
+@keyframes gridMove { 0%{transform:translate(0,0)} 100%{transform:translate(40px,40px)} }
+
+.anim-bg-gradient {
+  position: fixed; top:-50%; left:-50%; width:200%; height:200%; pointer-events:none; z-index:0;
+  background: radial-gradient(circle at 30% 30%, rgba(163,113,247,0.06) 0%, transparent 50%),
+              radial-gradient(circle at 70% 70%, rgba(88,166,255,0.06) 0%, transparent 50%);
+  will-change: transform;
+}
+.anim-bg-gradient.float { animation: gradientFloat 15s ease-in-out infinite; }
+@keyframes gradientFloat { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-2%,2%)} }
+
+/* Nebula background */
+.anim-nebula {
+  position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(163,113,247,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(88,166,255,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(163,226,163,0.04) 0%, transparent 50%);
+  will-change: transform;
+}
+.anim-nebula.pulse { animation: nebulaPulse 8s ease-in-out infinite; }
+@keyframes nebulaPulse { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.03)} }
+
+/* Particles canvas */
+#particles-canvas { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+
+/* ===== HEADER ===== */
+.header { text-align:center; margin-bottom:40px; }
+.anim-header.header-in { animation: fadeInDown 0.8s ease both; }
+@keyframes fadeInDown { from{opacity:0;transform:translateY(-30px)} to{opacity:1;transform:translateY(0)} }
+
+.logo-container { display:inline-block; position:relative; margin-bottom:16px; }
+.anim-logo-glow {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:300px; height:300px; border-radius:50%;
+  background:radial-gradient(circle, rgba(163,113,247,0.15) 0%, transparent 70%);
+}
+.anim-logo-glow.pulse { animation: pulse 3s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:0.5;transform:translate(-50%,-50%) scale(1)} 50%{opacity:1;transform:translate(-50%,-50%) scale(1.1)} }
+
+.logo {
+  font-family:'JetBrains Mono',monospace; font-size:52px; font-weight:700;
+  background:linear-gradient(135deg, var(--purple), var(--blue), var(--green));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  position:relative; letter-spacing:-2px;
+}
+.logo span {
+  -webkit-text-fill-color:transparent;
+  background:linear-gradient(135deg, var(--yellow), var(--red));
+  -webkit-background-clip:text;
+}
+.anim-logo.shimmer { background-size:200% 200%; animation: shimmer 3s ease infinite; }
+@keyframes shimmer { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+
+
+
+.subtitle { font-size:14px; color:var(--fg2); letter-spacing:3px; text-transform:uppercase; font-family:'JetBrains Mono',monospace; }
+.version { display:inline-block; margin-top:8px; padding:3px 10px; border-radius:20px; background:var(--purple3); color:var(--purple); font-size:11px; font-family:'JetBrains Mono',monospace; border:1px solid var(--purple2); }
+
+/* Animation settings panel */
+.anim-panel {
+  position:fixed; top:12px; right:12px; z-index:100;
+  background:var(--bg2); border:1px solid var(--border); border-radius:12px;
+  padding:14px; width:220px; box-shadow:0 4px 20px rgba(0,0,0,0.4);
+  display:none;
+}
+.anim-panel.open { display:block; animation: slideDown 0.3s ease; }
+@keyframes slideDown { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+.anim-panel-title { font-size:12px; font-weight:600; margin-bottom:10px; text-align:center; font-family:'JetBrains Mono',monospace; color:var(--fg2); }
+.anim-toggle-btn {
+  position:fixed; top:12px; right:12px; z-index:101;
+  width:36px; height:36px; border-radius:50%; border:1px solid var(--border);
+  background:var(--bg2); color:var(--fg); font-size:16px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s;
+}
+.anim-toggle-btn:hover { border-color:var(--border2); background:var(--bg3); }
+.anim-row { display:flex; align-items:center; justify-content:space-between; padding:5px 0; font-size:12px; }
+.anim-row label { cursor:pointer; display:flex; align-items:center; gap:6px; }
+.anim-row input[type=checkbox] { accent-color:var(--purple); }
+.anim-badge { font-size:9px; background:var(--bg4); padding:1px 5px; border-radius:4px; color:var(--fg3); }
+.anim-master { border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:8px; }
+.anim-master label { font-weight:600; color:var(--purple); }
+
+/* ===== STATUS BAR ===== */
+.status-bar { display:flex; gap:12px; justify-content:center; margin-bottom:30px; flex-wrap:wrap; }
+.anim-status { animation: fadeIn 1s ease 0.3s both; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.status-pill {
+  display:flex; align-items:center; gap:6px;
+  padding:6px 14px; border-radius:20px; font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+  border:1px solid var(--border); background:var(--bg2);
+  transition:all 0.3s ease;
+}
+.status-pill:hover { border-color:var(--border2); background:var(--bg3); }
+.status-dot { width:8px; height:8px; border-radius:50%; }
+.anim-dot { animation: dotPulse 2s ease-in-out infinite; }
+@keyframes dotPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.status-dot.online { background:var(--green); box-shadow:0 0 8px var(--green); }
+.status-dot.offline { background:var(--red); box-shadow:0 0 8px var(--red); animation:none; }
+.status-dot.warning { background:var(--yellow); box-shadow:0 0 8px var(--yellow); }
+
+/* ===== CARDS ===== */
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.anim-grid { animation: fadeIn 1s ease 0.5s both; }
+@media(max-width:768px) { .grid { grid-template-columns:1fr; } }
+
+.card {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:12px; overflow:hidden; position:relative;
+  transition:all 0.3s ease;
+}
+.anim-card-float { transition:all 0.3s ease; }
+.anim-card-float:hover { transform:translateY(-4px) !important; box-shadow:0 8px 30px rgba(88,166,255,0.15) !important; }
+
+.anim-card-border { position:relative; }
+.anim-card-border::before {
+  content:''; position:absolute; top:-1px; left:-1px; right:-1px; bottom:-1px;
+  border-radius:13px; background:linear-gradient(45deg, var(--purple), var(--blue), var(--green), var(--yellow), var(--red), var(--purple));
+  background-size:400% 400%; z-index:-1; opacity:0;
+  transition:opacity 0.3s;
+}
+.anim-card-border:hover::before { opacity:1; animation: borderSpin 3s linear infinite; }
+@keyframes borderSpin { 0%{background-position:0% 50%} 100%{background-position:400% 50%} }
+
+.card-header { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+.card-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; }
+.card-icon.purple { background:var(--purple3); color:var(--purple); border:1px solid var(--purple2); }
+.card-icon.blue { background:var(--blue3); color:var(--blue); border:1px solid var(--blue2); }
+.card-icon.green { background:var(--green3); color:var(--green); border:1px solid var(--green2); }
+.card-icon.yellow { background:#2d1f00; color:var(--yellow); border:1px solid var(--yellow2); }
+.card-icon.red { background:var(--red3); color:var(--red); border:1px solid var(--red2); }
+.card-icon.cyan { background:#0a2a2e; color:var(--cyan); border:1px solid #1a5a63; }
+.anim-icon-bounce .card-icon { animation: iconBounce 2s ease-in-out infinite; }
+@keyframes iconBounce { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+.card-title { font-size:14px; font-weight:600; }
+.card-body { padding:16px 18px; }
+.device-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.device-label { font-size:11px; color:var(--fg3); text-transform:uppercase; letter-spacing:1px; margin-bottom:3px; font-family:'JetBrains Mono',monospace; }
+.device-value { font-size:14px; font-weight:500; }
+.device-value.highlight { color:var(--blue); }
+.device-value.success { color:var(--green); }
+.device-value.warning { color:var(--yellow); }
+.device-value.danger { color:var(--red); }
+.progress-container { margin:8px 0; }
+.progress-label { display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; }
+.progress-bar { height:6px; background:var(--bg4); border-radius:3px; overflow:hidden; }
+.progress-fill { height:100%; border-radius:3px; transition:width 1s ease; background:linear-gradient(90deg, var(--green2), var(--green)); }
+.progress-fill.warning { background:linear-gradient(90deg, var(--yellow2), var(--yellow)); }
+.progress-fill.danger { background:linear-gradient(90deg, var(--red2), var(--red)); }
+
+/* ===== METHODS ===== */
+.method-row { display:flex; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); transition:background 0.2s ease; cursor:pointer; }
+.method-row:last-child { border-bottom:none; }
+.method-row:hover { background:var(--bg3); margin:0 -18px; padding:10px 18px; border-radius:8px; }
+.anim-method-slide .method-row { animation: slideInRow 0.3s ease both; }
+@keyframes slideInRow { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
+.method-num { width:28px; font-family:'JetBrains Mono',monospace; color:var(--fg3); font-size:12px; }
+.method-name { flex:1; font-weight:500; font-size:13px; }
+.method-success { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; width:50px; text-align:right; }
+.method-bar { width:80px; margin:0 12px; }
+.method-bar-inner { height:4px; background:var(--bg4); border-radius:2px; overflow:hidden; }
+.method-bar-fill { height:100%; border-radius:2px; }
+.method-badge { padding:2px 8px; border-radius:10px; font-size:10px; font-family:'JetBrains Mono',monospace; font-weight:500; }
+.badge-ok { background:var(--green3); color:var(--green); border:1px solid var(--green2); }
+.badge-warn { background:#2d1f00; color:var(--yellow); border:1px solid var(--yellow2); }
+
+/* ===== RISK ===== */
+.risk-score { text-align:center; padding:20px 0; }
+.risk-number { font-size:48px; font-weight:700; font-family:'JetBrains Mono',monospace; line-height:1; }
+.anim-risk-number { animation: riskCount 1s ease both; }
+@keyframes riskCount { from{transform:scale(0.5);opacity:0} to{transform:scale(1);opacity:1} }
+.risk-label { font-size:12px; color:var(--fg3); margin-top:4px; text-transform:uppercase; letter-spacing:2px; }
+.risk-level { font-size:14px; font-weight:600; margin-top:8px; padding:4px 12px; border-radius:12px; display:inline-block; }
+.risk-low { color:var(--green); background:var(--green3); }
+.risk-medium { color:var(--yellow); background:#2d1f00; }
+.risk-high { color:var(--red); background:var(--red3); }
+.risk-item { display:flex; align-items:center; gap:8px; padding:8px 0; font-size:13px; border-bottom:1px solid var(--border); }
+.risk-item:last-child { border-bottom:none; }
+
+/* ===== BUTTONS ===== */
+.btn-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.btn { padding:12px 16px; border-radius:8px; border:1px solid var(--border); background:var(--bg3); color:var(--fg); font-size:13px; font-weight:500; cursor:pointer; transition:all 0.2s ease; font-family:'Inter',sans-serif; display:flex; align-items:center; gap:8px; justify-content:center; }
+.btn:hover { border-color:var(--border2); background:var(--bg4); transform:translateY(-1px); }
+.btn:active { transform:translateY(0); }
+.btn-icon { font-size:16px; }
+.btn-primary { background:var(--blue2); border-color:var(--blue); color:white; }
+.btn-primary:hover { background:var(--blue); }
+.btn-danger { background:var(--red3); border-color:var(--red2); color:var(--red); }
+.btn-danger:hover { background:var(--red2); color:white; }
+.btn-success { background:var(--green3); border-color:var(--green2); color:var(--green); }
+.btn-success:hover { background:var(--green2); color:white; }
+.btn-purple { background:var(--purple3); border-color:var(--purple2); color:var(--purple); }
+.btn-purple:hover { background:var(--purple2); color:white; }
+.anim-btn-glow .btn:hover { box-shadow:0 0 15px currentColor; }
+
+.card-full { grid-column:1 / -1; }
+.app-list { max-height:200px; overflow-y:auto; font-family:'JetBrains Mono',monospace; font-size:12px; }
+.app-list::-webkit-scrollbar { width:6px; }
+.app-list::-webkit-scrollbar-track { background:var(--bg); }
+.app-list::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
+.app-item { padding:4px 8px; border-radius:4px; margin:2px 0; display:flex; align-items:center; gap:8px; }
+.app-item:hover { background:var(--bg3); }
+.app-dot { width:6px; height:6px; border-radius:50%; background:var(--green); flex-shrink:0; }
+
+.spinner { display:inline-block; width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--blue); border-radius:50%; }
+.anim-spin { animation: spin 0.8s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+.toast-container { position:fixed; top:20px; right:20px; z-index:1000; }
+.toast { padding:12px 20px; border-radius:8px; margin-bottom:8px; font-size:13px; font-weight:500; border:1px solid; min-width:250px; }
+.anim-toast { animation: slideIn 0.3s ease; }
+@keyframes slideIn { from{opacity:0;transform:translateX(30px)} to{opacity:1;transform:translateX(0)} }
+.toast-success { background:var(--green3); color:var(--green); border-color:var(--green2); }
+.toast-error { background:var(--red3); color:var(--red); border-color:var(--red2); }
+.toast-info { background:var(--blue3); color:var(--blue); border-color:var(--blue2); }
+
+.modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:999; display:flex; align-items:center; justify-content:center; }
+.anim-overlay { animation: fadeIn 0.2s ease; }
+.modal { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:24px; max-width:450px; width:90%; }
+.anim-modal { animation: scaleIn 0.3s ease; }
+@keyframes scaleIn { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
+.modal-title { font-size:16px; font-weight:600; margin-bottom:12px; }
+.modal-text { font-size:13px; color:var(--fg2); margin-bottom:20px; line-height:1.5; }
+.modal-actions { display:flex; gap:10px; justify-content:flex-end; }
+
+.no-device { text-align:center; padding:40px 20px; }
+.no-device-icon { font-size:48px; margin-bottom:12px; opacity:0.3; }
+.no-device-text { font-size:14px; color:var(--fg2); }
+.no-device-hint { font-size:12px; color:var(--fg3); margin-top:8px; }
+
+.scan-line { position:absolute; top:0; left:0; width:100%; height:2px; background:linear-gradient(90deg, transparent, var(--blue), transparent); opacity:0; pointer-events:none; }
+.anim-scan .scan-line { opacity:1; animation: scan 2s linear infinite; }
+@keyframes scan { 0%{top:0} 100%{top:100%} }
+
+/* ===== PREMIUM ===== */
+.premium-btn { position:fixed; top:56px; right:12px; z-index:100; background:linear-gradient(135deg, #ffd700, #ff8c00); color:#000; border:none; font-weight:700; padding:6px 14px; border-radius:20px; font-size:11px; cursor:pointer; box-shadow:0 0 20px rgba(255,215,0,0.3); }
+.premium-btn:hover { box-shadow:0 0 30px rgba(255,215,0,0.5); transform:scale(1.05); }
+.premium-card { background:linear-gradient(135deg, #1a1a2e, #16213e); border:1px solid #ffd700; }
+.premium-card .card-title { color:#ffd700; }
+.premium-tier { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+.premium-tier-box { flex:1; min-width:140px; background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:16px; text-align:center; cursor:pointer; transition:all 0.2s; }
+.premium-tier-box:hover { border-color:#ffd700; transform:translateY(-2px); box-shadow:0 0 15px rgba(255,215,0,0.2); }
+.premium-tier-box.recommended { border-color:#ffd700; background:linear-gradient(135deg, #2d2410, #1a1a2e); }
+.premium-tier-name { font-size:13px; font-weight:600; color:var(--fg2); text-transform:uppercase; letter-spacing:1px; }
+.premium-tier-price { font-size:28px; font-weight:700; color:#ffd700; margin:8px 0; }
+.premium-tier-price small { font-size:14px; font-weight:400; }
+.premium-tier-desc { font-size:11px; color:var(--fg3); margin-top:4px; }
+.premium-tier-btn { margin-top:12px; padding:8px 20px; border-radius:20px; border:none; background:linear-gradient(135deg, #ffd700, #ff8c00); color:#000; font-weight:600; font-size:12px; cursor:pointer; }
+.premium-tier-btn:hover { opacity:0.9; transform:scale(1.02); }
+.premium-key-input { display:flex; gap:8px; margin-top:12px; }
+.premium-key-input input { flex:1; background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:8px 12px; color:var(--fg); font-family:'JetBrains Mono',monospace; font-size:12px; outline:none; }
+.premium-key-input input:focus { border-color:#ffd700; }
+.premium-key-input button { padding:8px 16px; border-radius:6px; border:1px solid #ffd700; background:linear-gradient(135deg, #ffd700, #ff8c00); color:#000; font-weight:600; cursor:pointer; font-size:12px; }
+.premium-badge { display:inline-block; background:linear-gradient(135deg, #ffd700, #ff8c00); color:#000; padding:2px 10px; border-radius:10px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+.premium-feature-list { text-align:left; font-size:12px; color:var(--fg2); margin-top:8px; }
+.premium-feature-list li { padding:4px 0; }
+.premium-feature-list li:before { content:'✓ '; color:#ffd700; font-weight:700; }
+.premium-locked { opacity:0.5; pointer-events:none; position:relative; }
+.premium-locked:after { content:'🔒 Premium'; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.8); color:#ffd700; padding:4px 12px; border-radius:6px; font-size:11px; font-weight:600; }
+
+/* ===== DEVICE DETAILS ===== */
+.detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.detail-item { background:var(--bg3); border-radius:6px; padding:8px 10px; }
+.detail-label { font-size:10px; color:var(--fg3); text-transform:uppercase; letter-spacing:1px; }
+.detail-value { font-size:13px; font-weight:600; margin-top:2px; font-family:'JetBrains Mono',monospace; }
+.cooldown-bar { height:4px; background:var(--bg4); border-radius:2px; overflow:hidden; margin-top:4px; }
+.cooldown-fill { height:100%; border-radius:2px; background:linear-gradient(90deg, var(--red), var(--yellow), var(--green)); transition:width 1s; }
+
+/* ===== PREMIUM DASHBOARD ===== */
+.brand-badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:9px; font-weight:600; letter-spacing:0.5px; margin:2px; font-family:'JetBrains Mono',monospace; }
+.func-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(70px,1fr)); gap:6px; margin:8px 0; }
+.func-card { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:12px 8px; text-align:center; cursor:pointer; transition:all 0.2s; }
+.func-card:hover { border-color:var(--blue); transform:translateY(-2px); box-shadow:0 0 12px rgba(88,166,255,0.15); }
+.func-card.active { border-color:var(--purple); background:var(--purple3); }
+.func-icon { font-size:20px; margin-bottom:4px; }
+.func-name { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+.func-count { font-size:9px; color:var(--fg3); margin-top:2px; }
+.terminal-log { background:#0a0e14; border:1px solid var(--border); border-radius:6px; padding:8px; font-family:'JetBrains Mono',monospace; font-size:11px; height:120px; overflow-y:auto; margin-top:8px; }
+.terminal-log::-webkit-scrollbar { width:4px; }
+.terminal-log::-webkit-scrollbar-track { background:transparent; }
+.terminal-log::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+.term-line { padding:1px 0; line-height:1.4; white-space:pre-wrap; word-break:break-all; }
+.term-prompt { color:var(--green); }
+.term-output { color:var(--fg2); }
+.term-ok { color:var(--green); }
+.term-err { color:var(--red); }
+.term-info { color:var(--cyan); }
+/* ===== ACTION BADGES ===== */
+.action-result { font-size:12px; font-family:'JetBrains Mono',monospace; padding:8px; border-radius:6px; margin-top:4px; }
+</style>
+</head>
+<body>
+<div class="anim-bg-grid move" id="anim-bg-grid"></div>
+<div class="anim-bg-gradient float" id="anim-bg-gradient"></div>
+<div class="anim-nebula pulse" id="anim-nebula"></div>
+<canvas id="particles-canvas"></canvas>
+
+<button class="anim-toggle-btn" id="anim-toggle-btn" onclick="toggleAnimPanel()" title="Animation Settings">✨</button>
+
+<div class="anim-panel" id="anim-panel">
+  <div class="anim-panel-title">⚙️ Animation Settings</div>
+  <div class="anim-row anim-master">
+    <label><input type="checkbox" id="anim-master" checked onchange="toggleMaster()"> <span style="color:var(--purple)">ALL ANIMATIONS</span></label>
+  </div>
+  <div class="anim-row"><label><input type="checkbox" checked data-anim="bg-move" onchange="toggleAnim(this)"> BG Grid</label><span class="anim-badge">~2%</span></div>
+  <div class="anim-row"><label><input type="checkbox" checked data-anim="bg-float" onchange="toggleAnim(this)"> BG Float</label><span class="anim-badge">~1%</span></div>
+  <div class="anim-row"><label><input type="checkbox" checked data-anim="nebula" onchange="toggleAnim(this)"> Nebula</label><span class="anim-badge">~1%</span></div>
+  <div class="anim-row"><label><input type="checkbox" checked data-anim="particles" onchange="toggleAnim(this)"> Particles</label><span class="anim-badge">~3%</span></div>
+  <div class="anim-row"><label><input type="checkbox" checked data-anim="header" onchange="toggleAnim(this)"> Header</label><span class="anim-badge">~1%</span></div>
+  <div class="anim-row"><label><input type="checkbox" checked data-anim="shimmer" onchange="toggleAnim(this)"> Shimmer</label><span class="anim-badge">~1%</span></div>
+  <div class="anim-row"><label><input type="checkbox" checked data-anim="card-float" onchange="toggleAnim(this)"> Card Float</label><span class="anim-badge">~2%</span></div>
+  <div class="anim-row"><label><input type="checkbox" data-anim="card-border" onchange="toggleAnim(this)"> Card Border</label><span class="anim-badge">~4%</span></div>
+  <div class="anim-row"><label><input type="checkbox" data-anim="icon-bounce" onchange="toggleAnim(this)"> Icons</label><span class="anim-badge">~1%</span></div>
+  <div class="anim-row"><label><input type="checkbox" data-anim="btn-glow" onchange="toggleAnim(this)"> Button Glow</label><span class="anim-badge">~1%</span></div>
+  <div class="anim-row"><label><input type="checkbox" data-anim="method-slide" onchange="toggleAnim(this)"> Method Slide</label><span class="anim-badge">~2%</span></div>
+  <div class="anim-row"><label><input type="checkbox" data-anim="risk-count" onchange="toggleAnim(this)"> Risk Count</label><span class="anim-badge">~1%</span></div>
+  <div class="anim-row"><label><input type="checkbox" data-anim="scan" onchange="toggleAnim(this)"> Scan Line</label><span class="anim-badge">~1%</span></div>
+</div>
+
+<button class="premium-btn" id="premium-toggle" onclick="togglePremium()">👑 PREMIUM</button>
+
+<div class="toast-container" id="toasts"></div>
+<div class="container">
+  <div class="header anim-header header-in" id="anim-header">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <div class="logo-container" style="margin:0">
+        <div class="anim-logo-glow pulse" id="anim-logo-glow"></div>
+        <div class="logo anim-logo shimmer" id="anim-logo" style="font-size:22px">ROOT KIT <span>PRO</span></div>
+      </div>
+      <div style="flex:1"></div>
+      <div class="version" style="font-size:10px">v2.5</div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;max-width:560px">
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;background:#ff6900;color:#fff;font-size:10px;font-weight:700;min-width:62px">
+        <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#fff" stroke-width="2"/><text x="12" y="17" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold" font-family="sans-serif">V</text></svg>
+        VIVO
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;background:#6a1ab1;color:#fff;font-size:10px;font-weight:700;min-width:62px">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path d="M4 4h4l4 8 4-8h4L12 22z" fill="#fff"/></svg>
+        MOTO
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;background:#1d1d1f;color:#fff;font-size:10px;font-weight:700;min-width:62px">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path d="M17.5 2a4.5 4.5 0 0 0-3.5 1.7 4.5 4.5 0 0 0-7 5.5A12.5 12.5 0 0 1 2 17.5 4.5 4.5 0 0 0 6 22h12a4.5 4.5 0 0 0 4-4.5 12.5 12.5 0 0 1-5-8.3 4.5 4.5 0 0 0-3.5-7.2z" fill="#fff"/></svg>
+        iPhone
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;background:#0b8c3a;color:#fff;font-size:10px;font-weight:700;min-width:62px">
+        <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#fff" stroke-width="2"/><text x="12" y="17" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold" font-family="sans-serif">O</text></svg>
+        OPPO
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;background:#cf0a2c;color:#fff;font-size:10px;font-weight:700;min-width:62px">
+        <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="#fff" stroke-width="2"/><line x1="8" y1="8" x2="16" y2="16" stroke="#fff" stroke-width="1.5"/><line x1="16" y1="8" x2="8" y2="16" stroke="#fff" stroke-width="1.5"/></svg>
+        HUAWEI
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;background:#ff6700;color:#fff;font-size:10px;font-weight:700;min-width:62px">
+        <svg width="20" height="18" viewBox="0 0 32 24"><rect x="2" y="4" width="28" height="16" rx="3" fill="none" stroke="#fff" stroke-width="2"/><text x="16" y="17" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">MI</text></svg>
+        XIAOMI
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;background:#a50034;color:#fff;font-size:10px;font-weight:700;min-width:62px">
+        <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#fff" stroke-width="2"/><text x="12" y="17" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">LG</text></svg>
+        LG
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;background:#0d9440;color:#fff;font-size:10px;font-weight:700;min-width:62px">
+        <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#fff" stroke-width="2"/><text x="12" y="17" text-anchor="middle" fill="#fff" font-size="8" font-weight="bold" font-family="sans-serif">N</text></svg>
+        NOKIA
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;background:#e2231a;color:#fff;font-size:10px;font-weight:700;min-width:62px">
+        <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#fff" stroke-width="2"/><text x="12" y="17" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold" font-family="sans-serif">L</text></svg>
+        LENOVO
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;background:#3ddc84;color:#000;font-size:10px;font-weight:700;min-width:62px">
+        <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="8" cy="10" r="1.5" fill="#000"/><circle cx="16" cy="10" r="1.5" fill="#000"/><path d="M10 15c1 1 3 1 4 0" fill="none" stroke="#000" stroke-width="1.2"/><path d="M12 2C8 2 4 5 3 9c-1 4 0 8 3 11s7 3 11 2 5-4 6-7c1-4-1-9-5-11s-6-2-6-2z" fill="#3ddc84" stroke="#000" stroke-width=".5"/></svg>
+        ANDROID
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;background:#ff6b35;color:#fff;font-size:10px;font-weight:700;min-width:62px">
+        <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#fff" stroke-width="2"/><text x="12" y="17" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold" font-family="sans-serif">X</text></svg>
+        INFINIX
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;background:#000;color:#fff;font-size:10px;font-weight:700;min-width:62px">
+        <svg width="20" height="20" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3" fill="none" stroke="#fff" stroke-width="1.5"/><line x1="8" y1="8" x2="16" y2="16" stroke="#fff" stroke-width="1.5"/><line x1="16" y1="8" x2="8" y2="16" stroke="#fff" stroke-width="1.5"/></svg>
+        NOTHING
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;background:#1b3a5c;color:#fff;font-size:10px;font-weight:700;min-width:62px">
+        <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#fff" stroke-width="2"/><text x="12" y="17" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">T</text></svg>
+        TECNO
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;background:#1488fc;color:#fff;font-size:10px;font-weight:700;min-width:62px">
+        <svg width="20" height="20" viewBox="0 0 24 24"><ellipse cx="12" cy="14" rx="10" ry="8" fill="none" stroke="#fff" stroke-width="2"/><text x="12" y="17" text-anchor="middle" fill="#fff" font-size="8" font-weight="bold" font-family="sans-serif">S</text></svg>
+        SAMSUNG
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;background:var(--bg4);color:var(--fg3);font-size:10px;font-weight:700;min-width:62px">
+        <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="var(--fg3)" stroke-width="2"/><text x="12" y="17" text-anchor="middle" fill="var(--fg3)" font-size="12" font-weight="bold" font-family="sans-serif">+</text></svg>
+        OTROS
+      </div>
+    </div>
+    <div class="subtitle" style="font-size:11px">Universal Phone Root / Unlock Tool</div>
+  </div>
+
+  <div class="status-bar anim-status">
+    <div class="status-pill"><div class="status-dot anim-dot" id="dot-device"></div><span id="status-device">Scanning...</span></div>
+    <div class="status-pill"><div class="status-dot online anim-dot"></div><span>ADB Online</span></div>
+    <div class="status-pill" id="pill-brand" style="display:none"><span id="status-brand"></span></div>
+    <div class="status-pill" id="pill-count" style="display:none"><span id="status-count"></span></div>
+    <div class="status-pill" style="cursor:pointer;opacity:0.5" onclick="toggleUSB()" title="Secret USB Analyzer"><span style="font-size:10px">🔌</span></div>
+  </div>
+
+  <div class="grid anim-grid" id="anim-grid">
+    <div class="card card-full anim-card-float anim-card-border anim-icon-bounce" id="card-device">
+      <div class="card-header">
+        <div class="card-icon blue">📱</div>
+        <div class="card-title">Device Information</div>
+        <div style="flex:1"></div>
+        <button class="btn btn-primary" onclick="refreshDevice()" style="padding:6px 12px;font-size:12px"><span class="btn-icon">↻</span> Refresh</button>
+      </div>
+      <div class="card-body" id="device-body">
+        <div class="no-device"><div class="no-device-icon">📱</div><div class="no-device-text">Connecting to device...</div><div class="no-device-hint">Connect via USB and enable USB Debugging</div></div>
+      </div>
+    </div>
+
+    <div class="card anim-card-float anim-card-border anim-icon-bounce anim-method-slide" id="card-methods" style="display:none">
+      <div class="card-header"><div class="card-icon purple">🔓</div><div class="card-title">Unlock Methods</div></div>
+      <div class="card-body" id="methods-body"></div>
+    </div>
+
+    <div class="card anim-card-float anim-card-border anim-icon-bounce anim-risk-count" id="card-risk" style="display:none">
+      <div class="card-header"><div class="card-icon yellow">⚠️</div><div class="card-title">Risk Analysis</div></div>
+      <div class="card-body" id="risk-body"></div>
+    </div>
+
+    <div class="card card-full anim-card-float anim-card-border anim-icon-bounce anim-btn-glow" id="card-actions" style="display:none">
+      <div class="card-header"><div class="card-icon green">⚡</div><div class="card-title">Actions</div></div>
+      <div class="card-body">
+        <div class="btn-grid">
+          <button class="btn btn-success" onclick="doBackup()"><span class="btn-icon">💾</span> Full Backup</button>
+          <button class="btn btn-purple" onclick="showApps()"><span class="btn-icon">📦</span> View Apps</button>
+          <button class="btn btn-danger" onclick="doPanic()"><span class="btn-icon">🚨</span> Panic Button</button>
+          <button class="btn" onclick="openTerminal()"><span class="btn-icon">🖥️</span> Open Terminal</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-full anim-card-float anim-card-border" id="card-details" style="display:none">
+      <div class="card-header"><div class="card-icon cyan">📊</div><div class="card-title">Device Details <span style="font-size:10px;color:var(--fg3);background:var(--bg4);padding:1px 6px;border-radius:4px">PREMIUM</span></div></div>
+      <div class="card-body" id="details-body"><div class="no-device"><div class="no-device-text">Connect a device to see details</div></div></div>
+    </div>
+
+    <div class="card card-full anim-card-float premium-card" id="card-actions-ext" style="display:none">
+      <div class="card-header"><div class="card-icon" style="color:#ffd700">⚡</div><div class="card-title" style="color:#ffd700">Power Actions <span class="premium-badge">PREMIUM</span></div></div>
+      <div class="card-body">
+        <div class="btn-grid" style="grid-template-columns:1fr 1fr 1fr">
+          <button class="btn btn-danger" onclick="doAction('fastboot')"><span class="btn-icon">⚡</span> Fastboot</button>
+          <button class="btn btn-purple" onclick="doAction('recovery')"><span class="btn-icon">🔄</span> Recovery</button>
+          <button class="btn" onclick="doAction('shizuku')"><span class="btn-icon">🛡️</span> Shizuku</button>
+          <button class="btn" onclick="doAction('dhizuku')"><span class="btn-icon">🔐</span> Dhizuku</button>
+          <button class="btn" onclick="doAction('edl')"><span class="btn-icon">💀</span> EDL Mode</button>
+          <button class="btn" onclick="doAction('soft-reboot')"><span class="btn-icon">🔄</span> Soft Reboot</button>
+          <button class="btn btn-success" onclick="doAction('screenshot')"><span class="btn-icon">📸</span> Screenshot</button>
+          <button class="btn" onclick="doAction('sideload')"><span class="btn-icon">📦</span> Sideload</button>
+          <button class="btn" onclick="doAction('screenrecord')"><span class="btn-icon">🎥</span> Screen Record</button>
+        </div>
+        <div id="action-result" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <div class="card card-full anim-card-float" id="card-optimize" style="display:none">
+      <div class="card-header"><div class="card-icon green">📊</div><div class="card-title">Device Optimization <span style="font-size:10px;color:var(--fg3);background:var(--bg4);padding:1px 6px;border-radius:4px">PREMIUM</span></div></div>
+      <div class="card-body" id="optimize-body"><div class="no-device"><div class="no-device-text">Connect a device to analyze</div></div></div>
+    </div>
+
+    <div class="card card-full anim-card-float" id="card-recovery" style="display:none">
+      <div class="card-header"><div class="card-icon purple">🔄</div><div class="card-title">Recvery <span style="font-size:10px;color:var(--fg3);background:var(--bg4);padding:1px 6px;border-radius:4px">PREMIUM</span></div></div>
+      <div class="card-body" id="recovery-body"><div class="no-device"><div class="no-device-text">Connect a device to check recovery</div></div></div>
+    </div>
+
+    <div class="card card-full premium-card" id="card-premium" style="display:none">
+      <div class="card-body" id="premium-dashboard">
+        <!-- ACTIVE STATE -->
+        <div id="premium-active" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-size:24px">🔧</span>
+            <span style="font-size:16px;font-weight:700;color:#ffd700">ROOT KIT PRO</span>
+            <span style="font-size:11px;color:var(--fg2);background:var(--bg3);padding:2px 8px;border-radius:4px" id="premium-user">PREMIUM</span>
+            <div style="flex:1"></div>
+            <span style="font-size:10px;color:var(--fg3)" id="premium-tier-display">Lifetime</span>
+            <button onclick="deactivatePremium()" style="background:transparent;border:none;color:var(--fg3);cursor:pointer;font-size:14px">✕</button>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;align-items:center">
+            <span class="brand-badge" style="background:#ff6900;color:#fff;display:inline-flex;align-items:center;gap:4px;padding:2px 6px">
+              <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#fff" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold" font-family="sans-serif">V</text></svg>
+              VIVO
+            </span>
+            <span class="brand-badge" style="background:#6a1ab1;color:#fff;display:inline-flex;align-items:center;gap:4px;padding:2px 6px">
+              <svg width="14" height="14" viewBox="0 0 24 24"><path d="M4 4h4l4 8 4-8h4L12 22z" fill="#fff"/></svg>
+              MOTOROLA
+            </span>
+            <span class="brand-badge" style="background:#1d1d1f;color:#fff;border:1px solid #555;display:inline-flex;align-items:center;gap:4px;padding:2px 6px">
+              <svg width="14" height="14" viewBox="0 0 24 24"><path d="M17.5 2a4.5 4.5 0 0 0-3.5 1.7 4.5 4.5 0 0 0-7 5.5A12.5 12.5 0 0 1 2 17.5 4.5 4.5 0 0 0 6 22h12a4.5 4.5 0 0 0 4-4.5 12.5 12.5 0 0 1-5-8.3 4.5 4.5 0 0 0-3.5-7.2z" fill="#fff"/><path d="M10 5a2.5 2.5 0 0 1 2 4 2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 12 4a2.5 2.5 0 0 0-2 1z" fill="#1d1d1f"/></svg>
+              iPhone
+            </span>
+            <span class="brand-badge" style="background:#0b8c3a;color:#fff;display:inline-flex;align-items:center;gap:4px;padding:2px 6px">
+              <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#fff" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">O</text></svg>
+              OPPO
+            </span>
+            <span class="brand-badge" style="background:#cf0a2c;color:#fff;display:inline-flex;align-items:center;gap:4px;padding:2px 6px">
+              <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z" fill="#fff"/><path d="M12 6c-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6z" fill="#cf0a2c" stroke="#fff" stroke-width=".5"/><path d="M10 10l4 4m-4 0l4-4" stroke="#fff" stroke-width="1.5"/></svg>
+              HUAWEI
+            </span>
+            <span class="brand-badge" style="background:#ff6700;color:#fff;display:inline-flex;align-items:center;gap:4px;padding:2px 6px">
+              <svg width="16" height="14" viewBox="0 0 32 24"><rect x="2" y="4" width="28" height="16" rx="3" fill="none" stroke="#fff" stroke-width="1.5"/><text x="16" y="17" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold" font-family="sans-serif">MI</text></svg>
+              XIAOMI
+            </span>
+            <span class="brand-badge" style="background:#a50034;color:#fff;display:inline-flex;align-items:center;gap:4px;padding:2px 6px">
+              <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#fff" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif">LG</text></svg>
+              LG
+            </span>
+            <span class="brand-badge" style="background:#0d9440;color:#fff;display:inline-flex;align-items:center;gap:4px;padding:2px 6px">
+              <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#fff" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="7" font-weight="bold" font-family="sans-serif">N</text></svg>
+              NOKIA
+            </span>
+            <span class="brand-badge" style="background:#e2231a;color:#fff;display:inline-flex;align-items:center;gap:4px;padding:2px 6px">
+              <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#fff" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold" font-family="sans-serif">L</text></svg>
+              LENOVO
+            </span>
+            <span class="brand-badge" style="background:#3ddc84;color:#000;display:inline-flex;align-items:center;gap:4px;padding:2px 6px">
+              <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 2C8 2 4 5 3 9c-1 4 0 8 3 11s7 3 11 2 5-4 6-7c1-4-1-9-5-11s-6-2-6-2z" fill="#3ddc84"/><circle cx="8" cy="10" r="1.5" fill="#fff"/><circle cx="16" cy="10" r="1.5" fill="#fff"/><path d="M10 15c1 1 3 1 4 0" fill="none" stroke="#fff" stroke-width="1.2"/></svg>
+              ANDROID
+            </span>
+            <span class="brand-badge" style="background:#ff6b35;color:#fff;display:inline-flex;align-items:center;gap:4px;padding:2px 6px">
+              <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#fff" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold" font-family="sans-serif">X</text></svg>
+              INFINIX
+            </span>
+            <span class="brand-badge" style="background:#000;color:#fff;border:1px solid #444;display:inline-flex;align-items:center;gap:4px;padding:2px 6px">
+              <svg width="14" height="14" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" fill="none" stroke="#fff" stroke-width="1.2"/><line x1="7" y1="7" x2="17" y2="17" stroke="#fff" stroke-width="1.2"/><line x1="17" y1="7" x2="7" y2="17" stroke="#fff" stroke-width="1.2"/></svg>
+              NOTHING
+            </span>
+            <span class="brand-badge" style="background:#1b3a5c;color:#fff;display:inline-flex;align-items:center;gap:4px;padding:2px 6px">
+              <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="#fff" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="8" font-weight="bold" font-family="sans-serif">T</text></svg>
+              TECNO
+            </span>
+            <span class="brand-badge" style="background:#1488fc;color:#fff;display:inline-flex;align-items:center;gap:4px;padding:2px 6px">
+              <svg width="14" height="14" viewBox="0 0 24 24"><ellipse cx="12" cy="14" rx="10" ry="8" fill="none" stroke="#fff" stroke-width="1.5"/><text x="12" y="17" text-anchor="middle" fill="#fff" font-size="7" font-weight="bold" font-family="sans-serif">S</text></svg>
+              SAMSUNG
+            </span>
+            <span class="brand-badge" style="background:var(--border);color:var(--fg);display:inline-flex;align-items:center;gap:4px;padding:2px 6px">
+              <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="none" stroke="var(--fg)" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" fill="var(--fg)" font-size="11" font-weight="bold" font-family="sans-serif">+</text></svg>
+              OTROS
+            </span>
+          </div>
+          <!-- FUNCTION MENU -->
+          <div class="func-grid" id="func-grid">
+            <div class="func-card" onclick="openFunc('unlock')" data-func="unlock">
+              <div class="func-icon">🔓</div><div class="func-name">Unlock</div><div class="func-count">BL / FRP</div>
+            </div>
+            <div class="func-card" onclick="openFunc('flash')" data-func="flash">
+              <div class="func-icon">⚡</div><div class="func-name">Flash</div><div class="func-count">ROM / FW</div>
+            </div>
+            <div class="func-card" onclick="openFunc('frp')" data-func="frp">
+              <div class="func-icon">🔐</div><div class="func-name">FRP / Accounts</div><div class="func-count">Bypass</div>
+            </div>
+            <div class="func-card" onclick="openFunc('imei')" data-func="imei">
+              <div class="func-icon">📡</div><div class="func-name">IMEI Repair</div><div class="func-count">Repair</div>
+            </div>
+            <div class="func-card" onclick="openFunc('backup')" data-func="backup">
+              <div class="func-icon">📦</div><div class="func-name">Backup/Restore</div><div class="func-count">Full</div>
+            </div>
+            <div class="func-card" onclick="openFunc('root')" data-func="root">
+              <div class="func-icon">🛡️</div><div class="func-name">Root / Magisk</div><div class="func-count">Root</div>
+            </div>
+            <div class="func-card" onclick="openFunc('security')" data-func="security">
+              <div class="func-icon">🔒</div><div class="func-name">Security</div><div class="func-count">Samsung Knox</div>
+            </div>
+            <div class="func-card" onclick="openFunc('tools')" data-func="tools">
+              <div class="func-icon">⚙️</div><div class="func-name">Advanced Tools</div><div class="func-count">ADB/Fastboot</div>
+            </div>
+            <!-- NEW v3.0 -->
+            <div class="func-card" onclick="openFunc('buildprop')" data-func="buildprop">
+              <div class="func-icon">📝</div><div class="func-name">Build.prop</div><div class="func-count">Editor</div>
+            </div>
+            <div class="func-card" onclick="openFunc('cpu')" data-func="cpu">
+              <div class="func-icon">⚡</div><div class="func-name">CPU Tweaks</div><div class="func-count">Gaming/Perf</div>
+            </div>
+            <div class="func-card" onclick="openFunc('test')" data-func="test">
+              <div class="func-icon">🧪</div><div class="func-name">Tests</div><div class="func-count">Screen/Sensors</div>
+            </div>
+            <div class="func-card" onclick="openFunc('logcat')" data-func="logcat">
+              <div class="func-icon">📋</div><div class="func-name">Logcat</div><div class="func-count">Viewer</div>
+            </div>
+            <div class="func-card" onclick="openFunc('ota')" data-func="ota">
+              <div class="func-icon">🚫</div><div class="func-name">OTA Block</div><div class="func-count">Block Updates</div>
+            </div>
+            <div class="func-card" onclick="openFunc('adbterm')" data-func="adbterm">
+              <div class="func-icon">🖥️</div><div class="func-name">ADB Shell</div><div class="func-count">Terminal</div>
+            </div>
+          </div>
+          <!-- FUNCTION DETAIL -->
+          <div id="func-detail" style="display:none;margin-top:4px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+              <button class="btn" onclick="closeFunc()" style="padding:2px 8px;font-size:10px">← Back</button>
+              <span id="func-detail-title" style="font-size:12px;font-weight:600"></span>
+            </div>
+            <div id="func-detail-actions" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px"></div>
+            <div id="func-detail-status" style="font-size:11px;color:var(--fg2)"></div>
+          </div>
+          <!-- TERMINAL LOG -->
+          <div style="margin-top:6px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+              <span style="font-size:10px;color:var(--fg3)">⬢ TERMINAL LOG</span>
+              <span id="term-status-dot" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green)"></span>
+              <span style="flex:1"></span>
+              <button onclick="clearTerm()" style="background:transparent;border:none;color:var(--fg3);cursor:pointer;font-size:10px">Clear</button>
+            </div>
+            <div class="terminal-log" id="terminal-log">
+              <div class="term-line"><span class="term-info">⬢ ROOT KIT PRO Terminal v2.5</span></div>
+              <div class="term-line"><span class="term-info">⬢ Ready — select a function above</span></div>
+            </div>
+          </div>
+        </div>
+        <!-- INACTIVE STATE (no key) -->
+        <div id="premium-inactive">
+          <div style="text-align:center;padding:12px">
+            <div style="font-size:32px;margin-bottom:4px">🔧</div>
+            <div style="font-size:14px;font-weight:700;color:#ffd700">ROOT KIT PRO PREMIUM</div>
+            <div style="font-size:11px;color:var(--fg2);margin:4px 0">Unlock all professional tool features</div>
+            <div class="brand-badge" style="background:var(--bg3);color:var(--fg);font-size:8px">VIVO</div>
+            <div class="brand-badge" style="background:var(--bg3);color:var(--fg);font-size:8px">XIAOMI</div>
+            <div class="brand-badge" style="background:var(--bg3);color:var(--fg);font-size:8px">SAMSUNG</div>
+            <div class="brand-badge" style="background:var(--bg3);color:var(--fg);font-size:8px">HUAWEI</div>
+            <div class="brand-badge" style="background:var(--bg3);color:var(--fg);font-size:8px">MOTOROLA</div>
+            <div class="brand-badge" style="background:var(--bg3);color:var(--fg);font-size:8px">OPPO</div>
+            <div class="brand-badge" style="background:var(--bg3);color:var(--fg);font-size:8px">iPhone</div>
+            <div class="brand-badge" style="background:var(--bg3);color:var(--fg);font-size:8px">+8 more</div>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px">
+            <div style="font-size:11px;color:var(--fg3);text-align:center;margin-bottom:6px">Enter your premium key</div>
+            <div class="premium-key-input">
+              <input type="text" id="premium-key" placeholder="Premium key..." onkeydown="if(event.key==='Enter')activateKey()">
+              <button onclick="activateKey()">Activate</button>
+            </div>
+            <div style="text-align:center;margin-top:6px">
+              <button class="btn" onclick="requestFreeKey()" id="btn-request-key" style="font-size:11px;padding:4px 12px">🔑 Request Free (24h)</button>
+              <div id="request-key-status" style="margin-top:4px;font-size:10px;color:var(--fg3)"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-full anim-card-float" id="card-backup" style="display:none">
+      <div class="card-header"><div class="card-icon cyan">📦</div><div class="card-title">Installed Apps</span></div><div style="flex:1"></div>
+        <button class="btn btn-primary" onclick="document.getElementById('card-backup').style.display='none'" style="padding:6px 12px;font-size:12px">✕ Close</button>
+      </div>
+      <div class="card-body"><div class="app-list" id="app-list"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="card card-full" id="card-usb" style="display:none;margin:0 auto;max-width:1100px;padding:0 20px;margin-top:16px">
+  <div class="card-header"><div class="card-icon cyan">🔌</div><div class="card-title">USB Analyzer <span style="font-size:10px;color:var(--fg3);background:var(--bg4);padding:1px 6px;border-radius:4px">SECRET</span></div><div style="flex:1"></div>
+    <button class="btn" onclick="toggleUSB()" style="padding:4px 10px;font-size:11px">✕</button>
+  </div>
+  <div class="card-body"><div id="usb-summary" style="margin-bottom:8px;font-size:12px"></div><div style="max-height:300px;overflow-y:auto" id="usb-body"></div></div>
+</div>
+
+<div class="modal-overlay anim-overlay" id="modal-method" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal anim-modal" style="max-width:600px">
+    <div class="modal-title" id="method-modal-title">🔓 Method</div>
+    <div class="modal-text" style="line-height:1.8;font-size:13px">
+      <div id="method-steps"></div>
+      <div id="method-auto-result" style="margin-top:12px;padding:10px;border-radius:8px;background:var(--bg3);display:none"></div>
+    </div>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn" onclick="document.getElementById('modal-method').style.display='none'">Close</button>
+      <button class="btn btn-success" id="btn-auto-execute" onclick="autoExecute()" style="display:none"><span class="btn-icon">⚡</span> Do it automatically</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay anim-overlay" id="modal-panic" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal anim-modal">
+    <div class="modal-title" style="color:var(--red)">⚠️ Emergency Panic</div>
+    <div class="modal-text">This will immediately kill ADB server and reboot the device to system. All traces will be cleared. Are you sure?</div>
+    <div class="modal-actions">
+      <button class="btn" onclick="document.getElementById('modal-panic').style.display='none'">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmPanic()">Execute Panic</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin;
+let allDevices = [];
+let selectedSerial = null;
+let usbVisible = false;
+let particlesRunning = false;
+let animEnabled = true;
+
+// ===== ANIMATION CONTROLS =====
+function toggleAnimPanel() {
+  document.getElementById('anim-panel').classList.toggle('open');
+}
+function toggleMaster() {
+  const on = document.getElementById('anim-master').checked;
+  animEnabled = on;
+  document.body.classList.toggle('no-anim', !on);
+  document.querySelectorAll('#anim-panel input[data-anim]').forEach(cb => {
+    cb.disabled = !on;
+    if (on) applyAnim(cb.dataset.anim, cb.checked);
+  });
+  if (on) {
+    document.querySelectorAll('#anim-panel input[data-anim]:checked').forEach(cb => applyAnim(cb.dataset.anim, true));
+    if (document.getElementById('anim-particles').checked) startParticles();
+  } else {
+    ['bg-move','bg-float','nebula','header','shimmer','card-float','card-border','icon-bounce','btn-glow','method-slide','risk-count','scan'].forEach(a => applyAnim(a, false));
+    stopParticles();
+  }
+}
+function toggleAnim(el) {
+  if (!animEnabled) return;
+  applyAnim(el.dataset.anim, el.checked);
+}
+function applyAnim(name, on) {
+  const cls = name === 'bg-move' ? ['anim-bg-grid','move'] :
+             name === 'bg-float' ? ['anim-bg-gradient','float'] :
+             name === 'nebula' ? ['anim-nebula','pulse'] :
+             name === 'header' ? ['anim-header','header-in'] :
+             name === 'shimmer' ? ['anim-logo','shimmer'] :
+             name === 'card-float' ? ['.anim-card-float','anim-card-float'] :
+             name === 'card-border' ? ['.anim-card-border','anim-card-border'] :
+             name === 'icon-bounce' ? ['.anim-icon-bounce','anim-icon-bounce'] :
+             name === 'btn-glow' ? ['.anim-btn-glow','anim-btn-glow'] :
+             name === 'method-slide' ? ['.anim-method-slide','anim-method-slide'] :
+             name === 'risk-count' ? ['.anim-risk-count','anim-risk-count'] :
+             name === 'scan' ? ['.anim-scan','anim-scan'] : null;
+  if (!cls) return;
+  const selector = cls[0];
+  const className = cls[1];
+  document.querySelectorAll(selector).forEach(el => el.classList.toggle(className, on));
+}
+function startParticles() {
+  if (particlesRunning) return;
+  particlesRunning = true;
+  const c = document.getElementById('particles-canvas');
+  const ctx = c.getContext('2d');
+  c.width = window.innerWidth;
+  c.height = window.innerHeight;
+  const particles = Array.from({length:40}, () => ({
+    x: Math.random()*c.width, y: Math.random()*c.height,
+    vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5,
+    r: Math.random()*2+1, a: Math.random()*0.4+0.1,
+  }));
+  function draw() {
+    if (!particlesRunning) return;
+    ctx.clearRect(0,0,c.width,c.height);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = c.width; if (p.x > c.width) p.x = 0;
+      if (p.y < 0) p.y = c.height; if (p.y > c.height) p.y = 0;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(163,113,247,${p.a})`;
+      ctx.fill();
+    });
+    // connections
+    for (let i=0; i<particles.length; i++) {
+      for (let j=i+1; j<particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 120) {
+          ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(163,113,247,${0.1*(1-dist/120)})`;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+  window.addEventListener('resize', () => { c.width = window.innerWidth; c.height = window.innerHeight; });
+}
+function stopParticles() {
+  particlesRunning = false;
+}
+
+// ===== TOAST =====
+function toast(msg, type='info') {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type} anim-toast`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+async function api(path) {
+  try { const r = await fetch(`${API}${path}`); return await r.json(); } catch(e) { return null; }
+}
+
+function renderDeviceCard(d) {
+  const blColor = d.bootloader === 'unlocked' ? 'success' : 'warning';
+  const rootColor = d.rooted ? 'success' : 'danger';
+  const batteryPct = parseInt(d.battery) || 0;
+  const batteryClass = batteryPct < 30 ? 'danger' : batteryPct < 50 ? 'warning' : '';
+  const isSelected = d.serial === selectedSerial;
+  const borderStyle = isSelected ? 'border:2px solid var(--blue);' : '';
+  const modeLabel = d.mode === 'fastboot' ? '<span style="color:var(--yellow);font-size:11px">⚡ FASTBOOT</span>' : '';
+  return `<div class="card anim-card-float anim-card-border" style="${borderStyle}cursor:pointer;margin-bottom:12px" onclick="selectDevice('${d.serial}')">
+    <div class="card-header"><div class="card-icon blue">📱</div><div class="card-title">${d.brand||'Unknown'} ${d.model||''} ${modeLabel}</div><div style="flex:1"></div>
+    <span style="font-size:11px;color:var(--fg3);font-family:'JetBrains Mono',monospace">${d.serial}</span></div>
+    <div class="card-body"><div class="device-grid">
+      <div class="device-item"><div class="device-label">Codename</div><div class="device-value" style="color:var(--cyan)">${d.codename||'N/A'}</div></div>
+      <div class="device-item"><div class="device-label">Android</div><div class="device-value success">${d.android||'N/A'}</div></div>
+      <div class="device-item"><div class="device-label">CPU</div><div class="device-value">${d.cpu||'N/A'}</div></div>
+      <div class="device-item"><div class="device-label">IMEI</div><div class="device-value" style="font-family:'JetBrains Mono',monospace;font-size:12px">${d.imei||'N/A'}</div></div>
+      <div class="device-item"><div class="device-label">Bootloader</div><div class="device-value ${blColor}">${d.bootloader==='unlocked'?'✓ Unlocked':'🔒 Locked'}</div></div>
+      <div class="device-item"><div class="device-label">Root</div><div class="device-value ${rootColor}">${d.rooted?'✓ Rooted':'✗ No root'}</div></div>
+      ${d.battery?`<div class="device-item" style="grid-column:span 2"><div class="device-label">Battery</div><div class="progress-container"><div class="progress-label"><span class="device-value">${d.battery}%</span><span class="device-value ${batteryClass}">${batteryPct<30?'LOW':batteryPct<50?'MEDIUM':'OK'}</span></div><div class="progress-bar"><div class="progress-fill ${batteryClass}" style="width:${batteryPct}%"></div></div></div></div>`:''}
+    </div></div></div>`;
+}
+
+function selectDevice(serial) {
+  selectedSerial = serial;
+  const d = allDevices.find(x => x.serial === serial);
+  if (d) { document.getElementById('pill-brand').style.display=''; document.getElementById('status-brand').textContent=`${d.brand} ${d.model}`; }
+  refreshDevice();
+  document.getElementById('card-methods').style.display=''; document.getElementById('card-risk').style.display=''; document.getElementById('card-actions').style.display='';
+  loadMethods(d.brand, serial); loadRisk(serial);
+  if (premiumActive) { loadDeviceDetails(serial); loadOptimize(serial); loadRecovery(serial); }
+}
+
+async function refreshDevice() {
+  document.getElementById('status-device').textContent = 'Scanning...';
+  document.getElementById('dot-device').className = 'status-dot warning anim-dot';
+  const data = await api('/api/devices');
+  if (!data || !data.count) {
+    document.getElementById('dot-device').className = 'status-dot offline'; document.getElementById('status-device').textContent='No devices';
+    document.getElementById('device-body').innerHTML=`<div class="no-device"><div class="no-device-icon">🔌</div><div class="no-device-text">No devices detected</div><div class="no-device-hint">Connect via USB and enable USB Debugging</div></div>`;
+    document.getElementById('card-methods').style.display='none'; document.getElementById('card-risk').style.display='none'; document.getElementById('card-actions').style.display='none';
+    document.getElementById('pill-brand').style.display='none'; document.getElementById('pill-count').style.display='none'; allDevices=[]; return;
+  }
+  allDevices = data.devices;
+  document.getElementById('dot-device').className = 'status-dot online anim-dot';
+  document.getElementById('status-device').textContent = `${data.count} device${data.count>1?'s':''}`;
+  document.getElementById('pill-count').style.display = ''; document.getElementById('status-count').textContent = `📱 ${data.count} connected`;
+  if (!selectedSerial || !allDevices.find(d=>d.serial===selectedSerial)) { selectedSerial=allDevices[0].serial; document.getElementById('pill-brand').style.display=''; document.getElementById('status-brand').textContent=`${allDevices[0].brand} ${allDevices[0].model}`; }
+  document.getElementById('device-body').innerHTML = allDevices.map(d => renderDeviceCard(d)).join('');
+  document.getElementById('card-methods').style.display=''; document.getElementById('card-risk').style.display=''; document.getElementById('card-actions').style.display='';
+  if (premiumActive) { document.getElementById('card-actions-ext').style.display=''; }
+  const sel = allDevices.find(d=>d.serial===selectedSerial);
+  if (sel) { loadMethods(sel.brand, selectedSerial); loadRisk(selectedSerial); if (premiumActive) { loadDeviceDetails(selectedSerial); loadOptimize(selectedSerial); loadRecovery(selectedSerial); } }
+  toast(allDevices.length===1 ? `Device: ${allDevices[0].model}` : `${allDevices.length} devices detected`, 'success');
+}
+
+async function loadMethods(brand, serial) {
+  const methods = await api(`/api/methods?brand=${encodeURIComponent(brand)}`);
+  if (!methods) return;
+  let html = '';
+  methods.forEach((m,i) => {
+    const pct=m.success, color=pct>=60?'var(--green)':pct>=35?'var(--yellow)':'var(--red)';
+    const badge=m.url?'<span class="method-badge badge-warn">Verify</span>':'<span class="method-badge badge-ok">Available</span>';
+    html+=`<div class="method-row" onclick="showMethod(${i})"><div class="method-num">${i+1}</div><div class="method-name">${m.name}</div><div class="method-bar"><div class="method-bar-inner"><div class="method-bar-fill" style="width:${pct}%;background:${color}"></div></div></div><div class="method-success" style="color:${color}">${pct}%</div>${badge}<span style="font-size:11px;color:var(--fg3);margin-left:8px">▶</span></div>`;
+  });
+  document.getElementById('methods-body').innerHTML = html;
+  window._currentMethods = methods;
+}
+
+function showMethod(idx) {
+  const m=window._currentMethods[idx]; if(!m) return;
+  document.getElementById('method-modal-title').textContent=`🔓 ${m.name}`;
+  let s='<div style="margin:12px 0;padding:12px;background:var(--bg3);border-radius:8px;font-size:13px;line-height:1.8">';
+  if(m.steps) m.steps.forEach(x=>{s+=`<div>${x}</div>`;}); else s+='<div>No detailed steps.</div>';
+  s+='</div>';
+  if(m.url) s+=`<div style="margin-top:8px"><a href="${m.url}" target="_blank" style="color:var(--blue)">${m.url}</a></div>`;
+  document.getElementById('method-steps').innerHTML=s;
+  document.getElementById('method-auto-result').style.display='none';
+  const btn=document.getElementById('btn-auto-execute');
+  if(m.cmd){btn.style.display='';btn.dataset.tool=m.tool;}else btn.style.display='none';
+  document.getElementById('modal-method').style.display='flex';
+}
+
+async function autoExecute() {
+  const tool=document.getElementById('btn-auto-execute').dataset.tool;
+  const btn=document.getElementById('btn-auto-execute'); btn.disabled=true; btn.innerHTML='<span class="btn-icon">⏳</span> Running...';
+  const r=await api(`/api/execute?tool=${tool}&serial=${selectedSerial||''}`);
+  const d=document.getElementById('method-auto-result'); d.style.display='';
+  if(r.status==='done'){d.style.background='var(--green3)';d.style.color='var(--green)';d.innerHTML=`✅ Executed: <code>${r.command}</code><br><pre style="font-size:11px;margin-top:4px;color:var(--fg2)">${r.output||'No output'}</pre>`;toast('Executed','success');}
+  else if(r.status==='manual'){d.style.background='#2d1f00';d.style.color='var(--yellow)';d.innerHTML=`ℹ️ ${r.msg}`;}
+  else{d.style.background='var(--red3)';d.style.color='var(--red)';d.innerHTML=`❌ ${r.msg||'Failed'}`;toast('Failed','error');}
+  btn.disabled=false; btn.innerHTML='<span class="btn-icon">⚡</span> Do it automatically';
+}
+
+async function loadRisk(serial) {
+  const risk=await api(`/api/risk?serial=${serial||''}`); if(!risk) return;
+  const scoreColor=risk.level==='low'?'var(--green)':risk.level==='medium'?'var(--yellow)':'var(--red)';
+  const levelClass=risk.level==='low'?'risk-low':risk.level==='medium'?'risk-medium':'risk-high';
+  const levelText=risk.level==='low'?'LOW RISK':risk.level==='medium'?'MEDIUM RISK':'HIGH RISK';
+  let rh=''; risk.risks.forEach(r=>{const ic=r.level==='critical'?'🔴':r.level==='warning'?'🟡':'🔵';rh+=`<div class="risk-item"><span class="risk-icon">${ic}</span> ${r.msg}</div>`;});
+  if(!risk.risks.length) rh='<div class="risk-item" style="color:var(--green)">✓ No risks</div>';
+  document.getElementById('risk-body').innerHTML=`<div class="risk-score"><div class="risk-number anim-risk-number" style="color:${scoreColor}">${risk.score}</div><div class="risk-label">out of 100</div><div class="risk-level ${levelClass}">${levelText}</div></div>${rh}`;
+}
+
+async function doBackup() { toast('Starting backup...','info'); const r=await api(`/api/backup?serial=${selectedSerial||''}`); if(r&&r.status==='ok') toast(`Backup: ${r.path}`,'success'); else toast('Backup failed','error'); }
+function doPanic() { document.getElementById('modal-panic').style.display='flex'; }
+async function confirmPanic() { document.getElementById('modal-panic').style.display='none'; await api(`/api/panic?serial=${selectedSerial||''}`); toast('Panic executed','error'); setTimeout(refreshDevice,3000); }
+async function showApps() { toast('Loading apps...','info'); const apps=await api(`/api/apps?serial=${selectedSerial||''}`); if(!apps){toast('Failed','error');return;} document.getElementById('app-list').innerHTML=apps.map(a=>`<div class="app-item"><div class="app-dot"></div> ${a}</div>`).join('')||'<div style="color:var(--fg3)">None</div>'; document.getElementById('card-backup').style.display=''; document.getElementById('card-backup').scrollIntoView({behavior:'smooth'}); }
+function openTerminal() { toast('Terminal: open rootkit-pro in your terminal','info'); }
+
+function toggleUSB() { usbVisible=!usbVisible; const el=document.getElementById('card-usb'); el.style.display=usbVisible?'':'none'; if(usbVisible) refreshUSB(); }
+async function refreshUSB() {
+  const usb=await api('/api/usb-devices'); if(!usb) return;
+  const el=document.getElementById('usb-body'); if(!el) return;
+  let html=''; const counts={}; const icons={audio:'🎧',charger:'🔌',storage:'💾',hub:'🔗',keyboard:'⌨️',mouse:'🖱️',camera:'📷',phone:'📱',bluetooth:'🔵',network:'🌐',printer:'🖨️',controller:'🎮',card_reader:'💳',display:'🖥️',other:'❓'};
+  usb.forEach(d=>{const t=d.type||'other'; counts[t]=(counts[t]||0)+1; const icon=icons[t]||'❓'; html+=`<div style="display:flex;align-items:center;gap:8px;padding:6px;font-size:12px"><span>${icon}</span><span style="background:var(--bg4);padding:1px 6px;border-radius:4px;font-size:10px;color:var(--cyan)">${t}</span><span style="color:${t==='other'?'var(--fg3)':'var(--fg)'}">${d.description||d.sys_name||'Unknown'}</span>${d.speed?`<span style="color:var(--fg3);font-size:10px">${d.speed}Mbps</span>`:''}${d.vid?`<span style="color:var(--fg3);font-family:monospace;font-size:10px">${d.vid}:${d.pid}</span>`:''}</div>`;});
+  let summary=''; for(const[t,c]of Object.entries(counts)) summary+=`<span style="background:var(--bg4);padding:2px 8px;border-radius:10px;font-size:10px;color:var(--fg2)">${t}: ${c}</span> `;
+  document.getElementById('usb-summary').innerHTML=summary||'<span style="color:var(--fg3);font-size:12px">No USB devices</span>';
+  el.innerHTML=html||'<div style="color:var(--fg3);padding:12px">No USB found</div>';
+}
+
+// ===== DEVICE DETAILS (RAM, Storage, Cooldown) =====
+let premiumActive = false;
+let premiumData = null;
+
+function togglePremium() {
+  const card = document.getElementById('card-premium');
+  card.style.display = card.style.display === 'none' ? '' : 'none';
+  card.scrollIntoView({behavior:'smooth'});
+  checkPremium();
+}
+
+async function checkPremium() {
+  const r = await api('/api/premium/status?key=' + encodeURIComponent(localStorage.getItem('rkp_key')||''));
+  if (r && r.active) {
+    premiumActive = true;
+    premiumData = r;
+    document.getElementById('premium-active').style.display = '';
+    document.getElementById('premium-inactive').style.display = 'none';
+    document.getElementById('premium-user').textContent = `Premium ${r.tier.toUpperCase()}`;
+    document.getElementById('premium-tier-display').textContent = r.tier === 'lifetime' ? 'Lifetime Access' : `Expires: ${r.expires}`;
+    document.getElementById('premium-toggle').textContent = '👑 ACTIVE';
+    document.getElementById('premium-toggle').style.background = 'linear-gradient(135deg, #3fb950, #238636)';
+    document.getElementById('card-actions-ext').style.display = '';
+    document.getElementById('card-premium').style.display = 'none';
+  } else {
+    premiumActive = false;
+    premiumData = null;
+    document.getElementById('premium-active').style.display = 'none';
+    document.getElementById('premium-inactive').style.display = '';
+    document.getElementById('premium-toggle').textContent = '👑 PREMIUM';
+    document.getElementById('premium-toggle').style.background = '';
+    document.getElementById('card-actions-ext').style.display = 'none';
+  }
+}
+
+async function activateKey() {
+  const key = document.getElementById('premium-key').value.trim();
+  if (!key) { toast('Enter a premium key', 'error'); return; }
+  const r = await api('/api/premium/validate?key=' + encodeURIComponent(key));
+  if (r && r.valid) {
+    localStorage.setItem('rkp_key', key);
+    toast(`Premium ${r.tier} activated! 🎉`, 'success');
+    checkPremium();
+  } else {
+    toast('Invalid key', 'error');
+  }
+}
+
+function deactivatePremium() {
+  localStorage.removeItem('rkp_key');
+  premiumActive = false;
+  premiumData = null;
+  toast('Premium deactivated', 'info');
+  checkPremium();
+}
+
+async function requestFreeKey() {
+  const btn = document.getElementById('btn-request-key');
+  const status = document.getElementById('request-key-status');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner anim-spin"></span> Requesting...';
+  const deviceId = 'user-' + Date.now().toString(36);
+  const r = await api('/api/premium/request?device_id=' + deviceId);
+  if (r && r.status === 'requested') {
+    status.innerHTML = '<span style="color:var(--green)">✓ Key requested! Wait 24h, then re-open Premium panel to activate.</span>';
+    toast('Key requested! Check back in 24h', 'success');
+    localStorage.setItem('rkp_pending_device', deviceId);
+  } else if (r && r.status === 'waiting') {
+    status.innerHTML = `<span style="color:var(--yellow)">⏳ ${r.ready_in} remaining. Wait and try again.</span>`;
+  } else if (r && r.status === 'ready') {
+    localStorage.setItem('rkp_key', r.key);
+    status.innerHTML = `<span style="color:var(--green)">✓ Key ready! Activating... ${r.key}</span>`;
+    toast('Premium key ready! 🎉', 'success');
+    checkPremium();
+  } else {
+    status.innerHTML = '<span style="color:var(--red)">Error requesting key</span>';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '🔑 Request Free Key (24h wait)';
+}
+
+async function loadDeviceDetails(serial) {
+  const el = document.getElementById('card-details');
+  if (!serial) { el.style.display = 'none'; return; }
+  if (!premiumActive) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  const d = await api('/api/device-details?serial=' + encodeURIComponent(serial));
+  if (!d) { document.getElementById('details-body').innerHTML = '<div class="no-device"><div class="no-device-text">Failed to load details</div></div>'; return; }
+  let html = '<div class="detail-grid">';
+  if (d.ram_total_gb) html += `<div class="detail-item"><div class="detail-label">RAM</div><div class="detail-value" style="color:var(--cyan)">${d.ram_total_gb}GB <span style="color:var(--fg3);font-size:11px">(${d.ram_avail_gb}GB free)</span></div></div>`;
+  if (d.storage_avail_gb) html += `<div class="detail-item"><div class="detail-label">Storage</div><div class="detail-value" style="color:var(--green)">${d.storage_used}/${d.storage_total} <span style="color:var(--fg3);font-size:11px">(${d.storage_avail_gb}GB free)</span></div></div>`;
+  if (d.battery_temp) html += `<div class="detail-item"><div class="detail-label">Battery Temp</div><div class="detail-value" style="color:${d.battery_temp>40?'var(--red)':'var(--fg)'}">${d.battery_temp}°C</div></div>`;
+  if (d.battery_voltage) html += `<div class="detail-item"><div class="detail-label">Battery Voltage</div><div class="detail-value">${d.battery_voltage}V</div></div>`;
+  if (d.battery_type) html += `<div class="detail-item"><div class="detail-label">Battery Type</div><div class="detail-value">${d.battery_type}</div></div>`;
+  if (d.cpu_cores) html += `<div class="detail-item"><div class="detail-label">CPU Cores</div><div class="detail-value">${d.cpu_cores}</div></div>`;
+  if (d.screen) html += `<div class="detail-item"><div class="detail-label">Screen</div><div class="detail-value">${d.screen}</div></div>`;
+  if (d.screen_density) html += `<div class="detail-item"><div class="detail-label">Density</div><div class="detail-value">${d.screen_density}dpi</div></div>`;
+  if (d.security_patch) html += `<div class="detail-item"><div class="detail-label">Security Patch</div><div class="detail-value" style="font-size:11px">${d.security_patch}</div></div>`;
+  if (d.fingerprint) html += `<div class="detail-item" style="grid-column:span 2"><div class="detail-label">Build Fingerprint</div><div class="detail-value" style="font-size:10px;color:var(--fg2);word-break:break-all">${d.fingerprint}</div></div>`;
+  html += '</div>';
+
+  // Unlock cooldown
+  if (d.unlock) {
+    const u = d.unlock;
+    const color = u.status === 'unlockable' ? 'var(--green)' : u.status === 'cooldown' ? 'var(--yellow)' : 'var(--fg3)';
+    html += `<div style="margin-top:8px;background:var(--bg3);border-radius:6px;padding:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><span style="color:${color};font-weight:600">🔓 ${u.status === 'unlockable' ? 'READY TO UNLOCK!' : u.status === 'cooldown' ? 'Cooldown in progress' : 'Unknown'}</span></div>
+        <div style="font-size:11px;color:var(--fg3)">${u.remaining_text}</div>
+      </div>
+      ${u.progress_pct !== undefined ? `<div class="cooldown-bar"><div class="cooldown-fill" style="width:${u.progress_pct}%"></div></div><div style="font-size:10px;color:var(--fg3);margin-top:2px">${u.progress_pct}% complete</div>` : ''}
+      ${u.bound_time ? `<div style="font-size:10px;color:var(--fg3);margin-top:4px">Bound: ${u.bound_time}</div>` : ''}
+    </div>`;
+  }
+  document.getElementById('details-body').innerHTML = html;
+}
+
+// ===== ACTIONS =====
+async function doAction(action) {
+  const resultEl = document.getElementById('action-result');
+  const serial = selectedSerial || '';
+  if (!serial && action !== 'usb') { toast('No device selected', 'error'); return; }
+  if (!premiumActive && ['fastboot','recovery','shizuku','dhizuku','edl','soft-reboot','sideload','screenrecord'].includes(action)) {
+    toast('🔒 Premium required for this action', 'error');
+    showToastPremium();
+    return;
+  }
+  resultEl.innerHTML = '<span class="spinner anim-spin"></span> Running...';
+  const r = await api(`/api/action?action=${action}&serial=${encodeURIComponent(serial)}`);
+  if (r && r.status === 'ok') {
+    resultEl.innerHTML = `<div class="action-result" style="background:var(--green3);color:var(--green);border:1px solid var(--green2)">✅ ${r.msg||'Done!'}</div>`;
+    toast(r.msg||'Action executed', 'success');
+  } else if (r && r.status === 'manual') {
+    resultEl.innerHTML = `<div class="action-result" style="background:#2d1f00;color:var(--yellow);border:1px solid var(--yellow2)">ℹ️ ${r.msg}</div>`;
+  } else {
+    resultEl.innerHTML = `<div class="action-result" style="background:var(--red3);color:var(--red);border:1px solid var(--red2)">❌ ${r?.msg||'Failed'}</div>`;
+    if (r?.msg) toast(r.msg, 'error'); else toast('Action failed', 'error');
+  }
+  setTimeout(() => resultEl.innerHTML = '', 5000);
+}
+
+function showToastPremium() {
+  toast('👑 Get Premium for all features! Click PREMIUM button', 'info');
+}
+
+// ===== PREMIUM DASHBOARD =====
+const FUNC_MENU = {
+  unlock: {name:"🔓 Unlock", desc:"Bootloader unlock, Mi Unlock, Fastboot methods",
+    actions:[
+      {label:"⚡ Fastboot Unlock", action:"fastboot", cmd:"fastboot flashing unlock"},
+      {label:"🔓 Mi Unlock", action:"mi_unlock", url:"https://en.miui.com/unlock/download_en.html"},
+      {label:"🔄 Reboot Fastboot", action:"fastboot"},
+      {label:"📋 Check Status", action:"status"},
+    ]},
+  flash: {name:"⚡ Flash", desc:"Flash ROMs, firmware, TWRP, partitions",
+    actions:[
+      {label:"📦 Flash TWRP", action:"flash_twrp", cmd:"fastboot flash recovery twrp.img"},
+      {label:"🔥 Flash ROM", action:"flash_rom", cmd:"fastboot flash system system.img"},
+      {label:"💀 EDL Mode", action:"edl"},
+      {label:"📥 Sideload", action:"sideload"},
+    ]},
+  frp: {name:"🔐 FRP / Accounts", desc:"FRP bypass, Google account removal, Mi Account",
+    actions:[
+      {label:"🔓 FRP Bypass", action:"frp_bypass"},
+      {label:"📧 Google Remove", action:"google_remove"},
+      {label:"🔐 Mi Account", action:"mi_account"},
+      {label:"🔄 Factory Reset", action:"reset"},
+    ]},
+  imei: {name:"📡 IMEI Repair", desc:"IMEI repair, baseband restore, NV backup",
+    actions:[
+      {label:"📡 Write IMEI", action:"write_imei", cmd:"at+imei=..."},
+      {label:"💾 NV Backup", action:"nv_backup"},
+      {label:"🔄 Baseband Restore", action:"baseband"},
+      {label:"⚠️ Info", action:"imei_info"},
+    ]},
+  backup: {name:"📦 Backup / Restore", desc:"Full backup, apps, data, partitions",
+    actions:[
+      {label:"💾 Full Backup", action:"backup", cmd:"adb backup -apk -shared -all -f backup.ab"},
+      {label:"📋 App Backup", action:"app_backup"},
+      {label:"📸 Photos", action:"photo_backup"},
+      {label:"🔄 Restore", action:"restore", cmd:"adb restore backup.ab"},
+    ]},
+  root: {name:"🛡️ Root / Magisk", desc:"Root device, install Magisk, patch boot",
+    actions:[
+      {label:"📦 Install Magisk", action:"install_magisk"},
+      {label:"🛡️ Patch Boot", action:"patch_boot", cmd:"magiskboot patch boot.img"},
+      {label:"🔓 Root Check", action:"root_check"},
+      {label:"🔄 Unroot", action:"unroot"},
+    ]},
+  security: {name:"🔒 Security", desc:"Samsung Knox, SafetyNet, encryption",
+    actions:[
+      {label:"🔓 Knox Remove", action:"knox_remove"},
+      {label:"🛡️ SafetyNet Fix", action:"safetynet"},
+      {label:"🔐 Encryption", action:"encryption"},
+      {label:"⚠️ Check Status", action:"sec_status"},
+    ]},
+  tools: {name:"⚙️ Advanced Tools", desc:"ADB commands, Fastboot, Device info",
+    actions:[
+      {label:"🖥️ ADB Shell", action:"adb_shell"},
+      {label:"📊 Device Info", action:"device_info"},
+      {label:"🔌 USB Analyzer", action:"usb"},
+      {label:"🔄 Soft Reboot", action:"soft-reboot"},
+    ]},
+  // NEW v3.0
+  buildprop: {name:"📝 Build.prop Editor", desc:"Edit system properties (DPI, model, etc.)",
+    actions:[
+      {label:"📋 List Props", action:"buildprop_list"},
+      {label:"📱 Change DPI", action:"buildprop_dpi"},
+      {label:"🏷️ Change Model", action:"buildprop_model"},
+      {label:"🔧 Custom Prop", action:"buildprop_custom"},
+    ]},
+  cpu: {name:"⚡ CPU/Gaming Tweaks", desc:"CPU governor, performance profiles",
+    actions:[
+      {label:"🚀 Performance", action:"cpu_performance"},
+      {label:"⚖️ Balanced", action:"cpu_balanced"},
+      {label:"🔋 Powersave", action:"cpu_powersave"},
+      {label:"📊 CPU Info", action:"cpu_info"},
+    ]},
+  test: {name:"🧪 Test Toolbox", desc:"Screen, sensors, touch, sound tests",
+    actions:[
+      {label:"📱 Screen Test", action:"test_screen"},
+      {label:"🖐️ Touch Test", action:"test_touch"},
+      {label:"📡 Sensors", action:"test_sensors"},
+      {label:"🔊 Sound", action:"test_sound"},
+    ]},
+  logcat: {name:"📋 Logcat Viewer", desc:"View system logs in real-time",
+    actions:[
+      {label:"📥 Get 20 Lines", action:"logcat_20"},
+      {label:"📥 Get 50 Lines", action:"logcat_50"},
+      {label:"🔍 Filter by keyword", action:"logcat_filter"},
+      {label:"🗑️ Clear Logcat", action:"logcat_clear"},
+    ]},
+  ota: {name:"🚫 OTA Blocker", desc:"Block system updates permanently",
+    actions:[
+      {label:"🔒 Block OTA", action:"ota_block"},
+      {label:"🔓 Unblock OTA", action:"ota_unblock"},
+      {label:"📋 Check Status", action:"ota_status"},
+    ]},
+  adbterm: {name:"🖥️ ADB Terminal", desc:"Send ADB shell commands",
+    actions:[
+      {label:"▶️ Run Command", action:"adbterm_run"},
+      {label:"📋 Last Output", action:"adbterm_last"},
+    ]},
+};
+
+let currentFunc = null;
+
+function openFunc(name) {
+  const f = FUNC_MENU[name];
+  if (!f) return;
+  currentFunc = name;
+  document.querySelectorAll('.func-card').forEach(c => c.classList.toggle('active', c.dataset.func === name));
+  document.getElementById('func-detail').style.display = '';
+  document.getElementById('func-detail-title').textContent = f.name;
+  let html = '';
+  f.actions.forEach(a => {
+    let extra = '';
+    if (a.url) extra = `<button class="btn" onclick="window.open('${a.url}','_blank')" style="padding:2px 8px;font-size:10px">🔗 Web</button>`;
+    else extra = `<button class="btn btn-primary" onclick="execFunc('${a.action}')" style="padding:2px 10px;font-size:10px">▶ Run</button>`;
+    html += `<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);padding:4px 8px;border-radius:4px;margin:2px 0">
+      <span style="font-size:11px">${a.label}</span>
+      <div style="display:flex;gap:4px">${extra}</div>
+    </div>`;
+  });
+  document.getElementById('func-detail-actions').innerHTML = html;
+  document.getElementById('func-detail-status').textContent = '';
+  termLog(`Selected: ${f.name} — ${f.desc}`, 'info');
+  document.getElementById('func-detail').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closeFunc() {
+  currentFunc = null;
+  document.querySelectorAll('.func-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('func-detail').style.display = 'none';
+}
+
+async function execFunc(action) {
+  const serial = selectedSerial || '';
+  termLog(`$ rootkit exec ${action}`, 'prompt');
+  document.getElementById('func-detail-status').innerHTML = '<span class="spinner anim-spin"></span> Running...';
+  try {
+    if (action === 'fastboot') {
+      const r = await api(`/api/action?action=fastboot&serial=${encodeURIComponent(serial)}`);
+      termLog(r?.msg || 'Rebooting to fastboot...', r?.status==='ok'?'ok':'err');
+    } else if (action === 'edl') {
+      const r = await api(`/api/action?action=edl&serial=${encodeURIComponent(serial)}`);
+      termLog(r?.msg || 'Rebooting to EDL...', r?.status==='ok'?'ok':'err');
+    } else if (action === 'sideload') {
+      termLog('ℹ️ Use: adb sideload <file.zip> from recovery mode', 'info');
+    } else if (action === 'backup') {
+      const r = await api(`/api/backup?serial=${encodeURIComponent(serial)}`);
+      termLog(r?.path || 'Backup done!', 'ok');
+    } else if (action === 'usb') {
+      toggleUSB();
+      termLog('USB Analyzer toggled', 'info');
+    } else if (action === 'soft-reboot') {
+      const r = await api(`/api/action?action=soft-reboot&serial=${encodeURIComponent(serial)}`);
+      termLog(r?.msg || 'Soft rebooting...', r?.status==='ok'?'ok':'err');
+    } else if (action === 'device_info') {
+      const d = await api(`/api/device-details?serial=${encodeURIComponent(serial)}`);
+      if (d) termLog(JSON.stringify({ram:d.ram_total_gb,storage:d.storage_avail_gb,screen:d.screen}, null, 1), 'info');
+      else termLog('No device connected', 'err');
+    } else if (action === 'status') {
+      termLog('Checking device status...', 'info');
+      const d = await api(`/api/devices`);
+      if (d) termLog(`Devices: ${d.count} connected`, d.count > 0 ? 'ok' : 'info');
+    // BUILD.PROP
+    } else if (action === 'buildprop_list') {
+      const r = await api(`/api/buildprop?serial=${encodeURIComponent(serial)}`);
+      if (r && r.props) termLog(`${r.count} properties loaded. First 10:\n`+Object.entries(r.props).slice(0,10).map(([k,v])=>`${k}=${v}`).join('\n'), 'ok');
+      else termLog('Failed to load props', 'err');
+    } else if (action === 'buildprop_dpi') {
+      const cur = await api(`/api/buildprop?serial=${encodeURIComponent(serial)}`);
+      const curDpi = cur?.props?.['ro.sf.lcd_density'] || '?';
+      const val = prompt(`Current DPI: ${curDpi}. Enter new DPI (e.g. 320, 400, 480):`, curDpi);
+      if (val && val.trim()) {
+        const r = await api(`/api/buildprop?serial=${encodeURIComponent(serial)}&prop=ro.sf.lcd_density&value=${encodeURIComponent(val.trim())}`);
+        termLog(`DPI set to ${r?.value||val}`, r?.status==='ok'?'ok':'err');
+      }
+    } else if (action === 'buildprop_model') {
+      const cur = await api(`/api/buildprop?serial=${encodeURIComponent(serial)}`);
+      const curMdl = cur?.props?.['ro.product.model'] || '?';
+      const val = prompt(`Current model: ${curMdl}. Enter new model name:`, curMdl);
+      if (val && val.trim()) {
+        const r = await api(`/api/buildprop?serial=${encodeURIComponent(serial)}&prop=ro.product.model&value=${encodeURIComponent(val.trim())}`);
+        termLog(`Model set to ${r?.value||val}`, r?.status==='ok'?'ok':'err');
+      }
+    } else if (action === 'buildprop_custom') {
+      const key = prompt('Enter property name (e.g. ro.product.manufacturer):');
+      if (!key) return;
+      const val = prompt(`Enter value for ${key}:`);
+      if (val !== null) {
+        const r = await api(`/api/buildprop?serial=${encodeURIComponent(serial)}&prop=${encodeURIComponent(key)}&value=${encodeURIComponent(val)}`);
+        termLog(`${key}=${r?.value||val}`, r?.status==='ok'?'ok':'err');
+      }
+    // CPU TWEAKS
+    } else if (action === 'cpu_performance') {
+      const r = await api(`/api/cpu-tweaks?serial=${encodeURIComponent(serial)}&profile=performance`);
+      termLog(r?.msg||'Performance mode set', 'ok');
+    } else if (action === 'cpu_balanced') {
+      const r = await api(`/api/cpu-tweaks?serial=${encodeURIComponent(serial)}&profile=balanced`);
+      termLog(r?.msg||'Balanced mode set', 'ok');
+    } else if (action === 'cpu_powersave') {
+      const r = await api(`/api/cpu-tweaks?serial=${encodeURIComponent(serial)}&profile=powersave`);
+      termLog(r?.msg||'Powersave mode set', 'ok');
+    } else if (action === 'cpu_info') {
+      const r = await api(`/api/cpu-tweaks?serial=${encodeURIComponent(serial)}`);
+      if (r) termLog(`Governor: ${r.governor}\nFreq: ${r.current_freq_mhz}MHz\nCores: ${r.cores_online}\nAvailable: ${(r.available_governors||[]).join(', ')}`, 'info');
+    // TEST TOOLBOX
+    } else if (action === 'test_screen') {
+      const r = await api(`/api/test-toolbox?serial=${encodeURIComponent(serial)}&test=screen`);
+      termLog(r?.output?.slice(0,500)||'No output', 'info');
+    } else if (action === 'test_touch') {
+      const r = await api(`/api/test-toolbox?serial=${encodeURIComponent(serial)}&test=touch`);
+      termLog(r?.output?.slice(0,500)||'No output', 'info');
+    } else if (action === 'test_sensors') {
+      const r = await api(`/api/test-toolbox?serial=${encodeURIComponent(serial)}&test=sensors`);
+      termLog(r?.output?.slice(0,500)||'No output', 'info');
+    } else if (action === 'test_sound') {
+      const r = await api(`/api/test-toolbox?serial=${encodeURIComponent(serial)}&test=sound`);
+      termLog(r?.output?.slice(0,500)||'No output', 'info');
+    // LOGCAT
+    } else if (action === 'logcat_20') {
+      const r = await api(`/api/logcat?serial=${encodeURIComponent(serial)}&lines=20`);
+      if (r && r.lines) r.lines.forEach(l => termLog(l, 'output'));
+      else termLog('No logcat output', 'info');
+    } else if (action === 'logcat_50') {
+      const r = await api(`/api/logcat?serial=${encodeURIComponent(serial)}&lines=50`);
+      if (r && r.lines) r.lines.forEach(l => termLog(l, 'output'));
+      else termLog('No logcat output', 'info');
+    } else if (action === 'logcat_filter') {
+      const filter = prompt('Filter logcat by keyword:');
+      if (!filter) return;
+      const r = await api(`/api/logcat?serial=${encodeURIComponent(serial)}&lines=50&filter=${encodeURIComponent(filter)}`);
+      if (r && r.lines && r.lines.length) r.lines.forEach(l => termLog(l, 'info'));
+      else termLog(`No matches for "${filter}"`, 'info');
+    } else if (action === 'logcat_clear') {
+      const r = await api(`/api/logcat?serial=${encodeURIComponent(serial)}&lines=1`);
+      termLog('Logcat fetched (clear via: adb logcat -c)', 'info');
+    // OTA
+    } else if (action === 'ota_block') {
+      const r = await api(`/api/ota-block?serial=${encodeURIComponent(serial)}&action=block`);
+      termLog(r?.msg||'OTA blocked', r?.status==='ok'?'ok':'err');
+    } else if (action === 'ota_unblock') {
+      const r = await api(`/api/ota-block?serial=${encodeURIComponent(serial)}&action=unblock`);
+      termLog(r?.msg||'OTA unblocked', r?.status==='ok'?'ok':'err');
+    } else if (action === 'ota_status') {
+      const r = await api(`/api/ota-block?serial=${encodeURIComponent(serial)}&action=status`);
+      termLog(`OTA blocked: ${r?.blocked ? 'YES 🔒' : 'NO (updates allowed)'}`, r?.blocked?'info':'ok');
+    // ADB TERMINAL
+    } else if (action === 'adbterm_run') {
+      const cmd = prompt('Enter ADB shell command:');
+      if (!cmd) return;
+      const r = await api(`/api/adb-shell?serial=${encodeURIComponent(serial)}&cmd=${encodeURIComponent(cmd)}`);
+      const out = r?.output?.trim();
+      if (out) termLog(out, 'output');
+      else termLog('(no output)', 'info');
+      window._lastAdbOutput = out;
+    } else if (action === 'adbterm_last') {
+      termLog(window._lastAdbOutput || '(no previous command)', 'info');
+    } else {
+      termLog(`ℹ️ ${action} — feature coming soon`, 'info');
+    }
+  } catch(e) {
+    termLog(`Error: ${e.message}`, 'err');
+  }
+  document.getElementById('func-detail-status').innerHTML = '';
+}
+
+function termLog(msg, type='output') {
+  const log = document.getElementById('terminal-log');
+  if (!log) return;
+  const cls = type === 'prompt' ? 'term-prompt' : type === 'ok' ? 'term-ok' : type === 'err' ? 'term-err' : type === 'info' ? 'term-info' : 'term-output';
+  const prefix = type === 'prompt' ? '$ ' : type === 'ok' ? '✓ ' : type === 'err' ? '✗ ' : '⬢ ';
+  const d = document.createElement('div');
+  d.className = `term-line ${cls}`;
+  d.textContent = prefix + msg;
+  log.appendChild(d);
+  log.scrollTop = log.scrollHeight;
+  if (log.children.length > 100) log.removeChild(log.firstChild);
+}
+
+function clearTerm() {
+  const log = document.getElementById('terminal-log');
+  if (log) log.innerHTML = '<div class="term-line"><span class="term-info">⬢ Terminal cleared</span></div>';
+}
+
+// ===== OPTIMIZATION =====
+async function loadOptimize(serial) {
+  const el = document.getElementById('card-optimize');
+  if (!serial) { el.style.display = 'none'; return; }
+  if (!premiumActive) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  document.getElementById('optimize-body').innerHTML = '<div class="no-device"><span class="spinner anim-spin"></span><div class="no-device-text">Analyzing device...</div></div>';
+  const d = await api('/api/optimize?serial=' + encodeURIComponent(serial));
+  if (!d || !d.tips) { document.getElementById('optimize-body').innerHTML = '<div class="no-device"><div class="no-device-text">Failed to analyze</div></div>'; return; }
+  const scoreColor = d.level === 'good' ? 'var(--green)' : d.level === 'fair' ? 'var(--yellow)' : 'var(--red)';
+  const scoreLabel = d.level === 'good' ? 'GOOD' : d.level === 'fair' ? 'FAIR' : 'NEEDS WORK';
+  let html = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <div style="font-size:32px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${scoreColor}">${d.score}<span style="font-size:14px;color:var(--fg3)">/100</span></div>
+    <div><div style="font-size:12px;font-weight:600;color:${scoreColor}">${scoreLabel}</div><div style="font-size:10px;color:var(--fg3)">Optimization Score</div></div>
+  </div>`;
+  d.tips.forEach(t => {
+    const typeColor = t.type === 'cache' ? 'var(--cyan)' : t.type === 'apps' ? 'var(--blue)' : t.type === 'updates' ? 'var(--green)' : t.type === 'battery' ? 'var(--yellow)' : t.type === 'performance' ? 'var(--purple)' : 'var(--fg2)';
+    html += `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-bottom:1px solid var(--border);font-size:12px">
+      <span style="font-size:14px">${t.icon||'💡'}</span>
+      <div style="flex:1;color:var(--fg2);line-height:1.4">${t.msg}</div>
+      ${t.action ? `<button class="btn" onclick="doOptimizeAction('${t.action}')" style="padding:2px 8px;font-size:10px;flex-shrink:0">Fix</button>` : ''}
+    </div>`;
+  });
+  document.getElementById('optimize-body').innerHTML = html;
+}
+function doOptimizeAction() { toast('Run optimization action manually for now', 'info'); }
+
+// ===== RECOVERY =====
+async function loadRecovery(serial) {
+  const el = document.getElementById('card-recovery');
+  if (!serial) { el.style.display = 'none'; return; }
+  if (!premiumActive) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  document.getElementById('recovery-body').innerHTML = '<div class="no-device"><span class="spinner anim-spin"></span><div class="no-device-text">Checking recovery...</div></div>';
+  const d = await api('/api/recovery?serial=' + encodeURIComponent(serial));
+  if (!d) { document.getElementById('recovery-body').innerHTML = '<div class="no-device"><div class="no-device-text">Failed</div></div>'; return; }
+  const recColor = d.recovery === 'twrp' ? 'var(--purple)' : d.recovery === 'orangefox' ? 'var(--yellow)' : d.recovery === 'pbrp' ? 'var(--cyan)' : 'var(--fg3)';
+  const recIcon = d.recovery === 'twrp' ? '🟣' : d.recovery === 'orangefox' ? '🦊' : d.recovery === 'pbrp' ? '🔵' : '🔴';
+  let html = `<div style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="font-size:20px">${recIcon}</span>
+      <div><span style="font-weight:600;color:${recColor}">${d.recovery.toUpperCase()}</span>
+      ${d.twrp_version ? `<span style="color:var(--fg3);font-size:11px">v${d.twrp_version}</span>` : ''}
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--fg3)">Mode: ${d.mode}</div>
+    ${d.has_recovery ? '<div style="font-size:11px;color:var(--green)">✓ Recovery partition detected</div>' : '<div style="font-size:11px;color:var(--fg3)">— Stock recovery</div>'}
+  </div><div style="font-size:11px;color:var(--fg2);margin-bottom:8px">Available:</div><div style="display:flex;flex-wrap:wrap;gap:4px">`;
+  d.features.forEach(f => {
+    const fIcon = f.includes('twrp') ? '🟣' : f.includes('bootloader') ? '🔓' : f.includes('reboot') ? '🔄' : '⚡';
+    html += `<span style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:10px">${fIcon} ${f.replace(/_/g,' ')}</span>`;
+  });
+  html += `</div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-danger" onclick="doAction('fastboot')" style="padding:4px 12px;font-size:11px">⚡ Reboot Bootloader</button>
+      <button class="btn btn-purple" onclick="doAction('recovery')" style="padding:4px 12px;font-size:11px">🔄 Reboot Recovery</button>
+      ${d.has_recovery ? `<button class="btn" onclick="toast('Flash TWRP manually or via fastboot flash recovery twrp.img','info')" style="padding:4px 12px;font-size:11px">📦 Flash TWRP</button>` : ''}
+    </div>`;
+  document.getElementById('recovery-body').innerHTML = html;
+}
+
+// Init
+checkPremium();
+refreshDevice();
+setInterval(refreshDevice, 3000);
+setInterval(() => { if(usbVisible) refreshUSB(); }, 5000);
+
+// Auto-start particles if master on
+setTimeout(() => {
+  if (animEnabled) {
+    document.querySelectorAll('#anim-panel input[data-anim]:checked').forEach(cb => applyAnim(cb.dataset.anim, true));
+    startParticles();
+  }
+}, 100);
+</script>
+</body>
+</html>

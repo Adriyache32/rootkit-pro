@@ -1,0 +1,6 @@
+logs/
+backups/
+blocked/
+webcache/
+*.log
+__pycache__/
