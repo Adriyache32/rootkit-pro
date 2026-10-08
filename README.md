@@ -1,93 +1,36 @@
 # ROOT KIT PRO v2.1
 
-Universal Phone Root / Unlock Tool — Works on **Linux** and **Windows**.
+<p align="center">
+  <img alt="Python" src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white">
+  <img alt="Linux" src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black">
+  <img alt="Windows" src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge">
+</p>
 
-## Features
+**Universal Phone Root / Unlock Tool** para **Linux** y **Windows**, con interfaz web en tema GitHub Dark.
 
-- Phone detection (ADB/Fastboot)
-- Brand-specific unlock methods (Xiaomi, Samsung, Google, Motorola, OnePlus, Huawei, Apple)
-- Risk analysis with scoring
-- Full backup (apps, photos, SMS, settings)
-- Emergency panic button
-- HTML interface (GitHub Dark theme)
-- Python API server (port 20229)
+## ✨ Funciones
 
-## Linux
+- Detección de teléfonos (**ADB / Fastboot**)
+- Métodos de desbloqueo por marca: Xiaomi, Samsung, Google, Motorola, OnePlus, Huawei, Apple
+- Análisis de riesgo con puntuación
+- Respaldo completo (apps, fotos, SMS, ajustes)
+- Botón de pánico
+- Interfaz HTML (tema GitHub Dark)
+- Servidor API en Python (puerto `20229`)
+
+## 🚀 Inicio rápido (Linux)
 
 ```bash
-# Quick start
 rootkit-pro
-
-# Or via API
-python3 ~/.rootkit-pro/backend/api.py
-# Open http://localhost:20229
 ```
 
-## Windows
+Windows: usa el lanzador incluido en `backend/` / `portable/`.
 
-### Option 1: Installer
-```cmd
-cd windows
-install.bat
-```
+## ⚠️ Aviso
 
-### Option 2: Portable
-```cmd
-# Run the batch launcher
-windows\ROOTKIT-PRO.bat
+Úsalo **solo en dispositivos que sean tuyos** y tras hacer copia de seguridad. Desbloquear el bootloader puede borrar datos y anular la garantía.
 
-# Or PowerShell CLI
-powershell -ExecutionPolicy Bypass -File windows\rootkit-pro.ps1
-```
+## 📄 Licencia
 
-### Option 3: API Server
-```cmd
-python %USERPROFILE%\.rootkit-pro\backend\api.py
-# Open http://localhost:20229 in browser
-```
-
-## Requirements
-
-### Both platforms
-- Python 3.8+
-- ADB Platform Tools
-- USB drivers for your phone
-- USB Debugging enabled
-
-### Windows
-- USB drivers (OEM specific)
-- Added `platform-tools` to PATH
-
-### Linux
-- `pacman -S android-tools` or download platform-tools
-
-## API Endpoints
-
-| Endpoint | Description |
-|----------|-------------|
-| `/api/device` | Connected device info |
-| `/api/methods?brand=Xiaomi` | Unlock methods |
-| `/api/risk` | Risk analysis |
-| `/api/apps` | List installed apps |
-| `/api/backup` | Full device backup |
-| `/api/panic` | Emergency disconnect |
-| `/api/system` | Host system info |
-
-## File Structure
-
-```
-~/.rootkit-pro/
-├── html/index.html          # Web interface
-├── backend/api.py           # API server (cross-platform)
-├── windows/
-│   ├── ROOTKIT-PRO.bat      # Windows launcher
-│   ├── rootkit-pro.ps1      # PowerShell CLI
-│   └── install.bat          # Windows installer
-├── portable/
-│   └── rootkit-pro-portable # Portable bash CLI
-└── logs/
-```
-
-## License
-
-MIT
+MIT — ver [LICENSE](LICENSE).
