@@ -1,6 +1,12 @@
-logs/
-backups/
-blocked/
-webcache/
-*.log
 __pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+*.log
+*.pid
+*.json
+.DS_Store
+.idea/
+.vscode/

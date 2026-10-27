@@ -1,0 +1,30 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions: {contents: write}
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - id: changelog
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          PREV_TAG=$(git tag --sort=-v:refname | grep -v "^${TAG}$" | head -1)
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          if [ -n "$PREV_TAG" ]; then
+            git log --pretty=format:"- %s (%an)" ${PREV_TAG}..HEAD > CHANGELOG_TEMP.md
+          else
+            git log --pretty=format:"- %s (%an)" > CHANGELOG_TEMP.md
+          fi
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat CHANGELOG_TEMP.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          generate_release_notes: true

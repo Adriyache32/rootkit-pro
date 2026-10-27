@@ -1,0 +1,19 @@
+name: 🐛 Bug Report
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes: {label: Versión, required: true}
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      options: [ADB, Fastboot, Unlock, Backup, UI, API, Linux, Windows]
+      required: true
+  - type: textarea
+    id: steps
+    attributes: {label: Pasos, required: true}
+  - type: textarea
+    id: logs
+    attributes: {label: Logs, render: shell}
