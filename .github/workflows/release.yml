@@ -22,7 +22,7 @@ jobs:
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           cat CHANGELOG_TEMP.md >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-      - uses: softprops/action-gh-release@v1
+      - uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
