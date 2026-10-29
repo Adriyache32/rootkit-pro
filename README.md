@@ -1,36 +1,96 @@
-# ROOT KIT PRO v2.1
+# rootkit-pro v2.1 🛡️
 
-<p align="center">
-  <img alt="Python" src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white">
-  <img alt="Linux" src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black">
-  <img alt="Windows" src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white">
-  <img alt="License" src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge">
-</p>
+> **Universal Phone Root / Unlock Tool** para **Linux** y **Windows**. ADB/Fastboot, análisis de riesgo, backup, botón de pánico. UI GitHub Dark.
 
-**Universal Phone Root / Unlock Tool** para **Linux** y **Windows**, con interfaz web en tema GitHub Dark.
+## ⚠️ ADVERTENCIA DE SEGURIDAD
+
+**Solo para dispositivos propios.** El desbloqueo del bootloader:
+- Borra **todos los datos** del dispositivo
+- Anula la **garantía** del fabricante
+- Puede dejar el dispositivo inutilizable (brick)
+- **Úsalo bajo tu propia responsabilidad**
 
 ## ✨ Funciones
 
-- Detección de teléfonos (**ADB / Fastboot**)
-- Métodos de desbloqueo por marca: Xiaomi, Samsung, Google, Motorola, OnePlus, Huawei, Apple
-- Análisis de riesgo con puntuación
-- Respaldo completo (apps, fotos, SMS, ajustes)
-- Botón de pánico
-- Interfaz HTML (tema GitHub Dark)
-- Servidor API en Python (puerto `20229`)
+| Función | Marcas soportadas |
+|---------|-------------------|
+| Detección ADB/Fastboot | Todas |
+| Unlock bootloader | Xiaomi, Google Pixel, OnePlus, Motorola, Nothing |
+| EDL Mode (Emergency Download) | Xiaomi, Motorola |
+| Samsung FRP bypass | Samsung (Exynos/Snapdragon) |
+| Backup completo | Apps, fotos, SMS, contactos, ajustes |
+| Análisis de riesgo | Puntuación 0-100 antes de cada operación |
+| Botón de pánico | Detiene todo y restaura backup automático |
+| UI Web (GitHub Dark) | Puerto 20229, responsive, móvil |
 
-## 🚀 Inicio rápido (Linux)
+## 🚀 Inicio rápido
 
 ```bash
-rootkit-pro
+# Linux
+git clone https://github.com/Adriyache32/rootkit-pro.git
+cd rootkit-pro
+chmod +x launcher.sh
+./launcher.sh
+
+# Windows
+# Ejecuta backend/rootkit-pro.exe o usa portable/rootkit-pro.bat
+
+# Docker
+docker run -d -p 20229:20229 --privileged -v /dev/bus/usb:/dev/bus/usb adriyache32/rootkit-pro
 ```
 
-Windows: usa el lanzador incluido en `backend/` / `portable/`.
+## 📸 Demo
 
-## ⚠️ Aviso
+![rootkit-pro Demo](assets/demo.gif)
 
-Úsalo **solo en dispositivos que sean tuyos** y tras hacer copia de seguridad. Desbloquear el bootloader puede borrar datos y anular la garantía.
+## 🔧 Configuración
+
+```yaml
+# config.yaml
+adb_path: "adb"
+fastboot_path: "fastboot"
+api_port: 20229
+backup_dir: "./backups"
+risk_threshold: 70  # Auto-cancelar si riesgo > 70
+auto_backup: true
+panic_enabled: true
+```
+
+## 🏗️ Arquitectura
+
+```
+rootkit-pro/
+├── launcher.sh              # Entry point Linux
+├── backend/
+│   ├── main.py             # FastAPI + WebSocket
+│   ├── adb.py              # Wrapper ADB async
+│   ├── fastboot.py         # Wrapper Fastboot
+│   ├── unlock/             # Métodos por marca
+│   │   ├── xiaomi.py
+│   │   ├── pixel.py
+│   │   ├── oneplus.py
+│   │   └── ...
+│   ├── risk.py             # Análisis de riesgo
+│   ├── backup.py           # Backup/restauración
+│   └── panic.py            # Botón de pánico
+├── html/                   # UI Web (GitHub Dark)
+│   ├── index.html
+│   ├── styles.css
+│   └── app.js
+└── packaging/
+    ├── Dockerfile
+    ├── rootkit-pro.spec    # PyInstaller
+    └── InnoSetup.iss       # Windows installer
+```
+
+## 🤝 Contribuir
+
+Ver [CONTRIBUTING.md](CONTRIBUTING.md) — **Lee SECURITY.md primero**
 
 ## 📄 Licencia
 
-MIT — ver [LICENSE](LICENSE).
+MIT — ver [LICENSE](LICENSE)
+
+---
+
+**Responsabilidad:** El autor no se hace responsable por daños a dispositivos.
